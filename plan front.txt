@@ -1,0 +1,4077 @@
+Absolutely. Since the **frontend is going to be assigned to a team**, I'm going to structure this as an actual implementation specification rather than a list of UI ideas.
+
+Your existing frontend plan already covers React, Vite, routing, maps, journey results, tickets, wallet and live rerouting.  We're going to expand that into the complete TransitOne frontend architecture while keeping those existing concepts compatible.
+
+# TransitOne — Complete Frontend Implementation Plan
+
+## 0. Frontend mission
+
+The frontend is not just a booking UI.
+
+It has to serve **three experiences from one frontend codebase**:
+
+```text
+                         TRANSITONE FRONTEND
+                                  │
+             ┌────────────────────┼────────────────────┐
+             │                    │                    │
+             ▼                    ▼                    ▼
+       PASSENGER APP        VISITOR EXPERIENCE    EMPLOYEE PORTAL
+             │                    │                    │
+       Indian users          Foreign users        Transport staff
+             │                    │                    │
+             └────────────────────┼────────────────────┘
+                                  │
+                           SHARED DESIGN SYSTEM
+                                  │
+                           SHARED API LAYER
+                                  │
+                         SHARED STATE MANAGEMENT
+```
+
+The **business logic should not be duplicated**.
+
+Only the experience and presentation should change.
+
+---
+
+# 1. Frontend technology stack
+
+I recommend:
+
+| Area         | Technology                     |
+| ------------ | ------------------------------ |
+| Framework    | React                          |
+| Language     | TypeScript                     |
+| Build        | Vite                           |
+| Routing      | React Router                   |
+| Server state | TanStack Query                 |
+| Local state  | Zustand                        |
+| Styling      | Tailwind CSS                   |
+| Forms        | React Hook Form                |
+| Validation   | Zod                            |
+| Maps         | MapLibre GL / Leaflet          |
+| Icons        | Lucide                         |
+| Animation    | Framer Motion                  |
+| i18n         | i18next                        |
+| PWA          | Vite PWA                       |
+| Testing      | Vitest + React Testing Library |
+| E2E          | Playwright                     |
+
+### Why TypeScript?
+
+Because you're building a platform where:
+
+```text
+Frontend
+      ↓
+API
+      ↓
+Journey
+      ↓
+Booking
+      ↓
+Ticket
+      ↓
+Wallet
+```
+
+all depend on shared data structures.
+
+JavaScript will eventually create:
+
+> "Backend says `totalCost`, frontend expects `cost`, another component expects `fare`."
+
+TypeScript catches much of this before runtime.
+
+---
+
+# 2. Frontend architecture
+
+Use feature-based architecture.
+
+```text
+src/
+│
+├── app/
+│   ├── App.tsx
+│   ├── router/
+│   ├── providers/
+│   └── config/
+│
+├── features/
+│   │
+│   ├── auth/
+│   ├── onboarding/
+│   ├── discovery/
+│   ├── journey/
+│   ├── booking/
+│   ├── tickets/
+│   ├── wallet/
+│   ├── liveJourney/
+│   ├── visitor/
+│   ├── employee/
+│   ├── notifications/
+│   ├── rewards/
+│   ├── accessibility/
+│   └── profile/
+│
+├── components/
+│   ├── ui/
+│   ├── journey/
+│   ├── transport/
+│   ├── map/
+│   ├── ticket/
+│   └── common/
+│
+├── services/
+│   ├── api/
+│   ├── auth/
+│   ├── location/
+│   └── notifications/
+│
+├── store/
+│   ├── authStore.ts
+│   ├── journeyStore.ts
+│   ├── preferenceStore.ts
+│   └── uiStore.ts
+│
+├── hooks/
+│
+├── types/
+│
+├── utils/
+│
+├── i18n/
+│
+└── styles/
+```
+
+### Rule
+
+A developer working on:
+
+```text
+features/journey/
+```
+
+shouldn't randomly modify:
+
+```text
+features/wallet/
+```
+
+unless the feature contract requires it.
+
+---
+
+# 3. Frontend application modes
+
+The application has three major shells.
+
+```text
+App
+ │
+ ├── PassengerShell
+ │
+ ├── VisitorShell
+ │
+ └── EmployeeShell
+```
+
+### Passenger
+
+```text
+/passenger/*
+```
+
+### Visitor
+
+```text
+/visitor/*
+```
+
+### Employee
+
+```text
+/employee/*
+```
+
+This gives you clean separation without maintaining three projects.
+
+---
+
+# 4. Authentication flow
+
+First screen:
+
+```text
+┌───────────────────────────────┐
+│          TRANSITONE            │
+│                               │
+│ Travel smarter.              │
+│                               │
+│ [ Login ]                     │
+│ [ Create account ]            │
+│                               │
+│ Employee / Staff Login        │
+└───────────────────────────────┘
+```
+
+Employee login must be visually separated.
+
+```text
+Passenger Login
+        ↓
+Passenger experience
+
+Employee Login
+        ↓
+Employee experience
+```
+
+---
+
+# 5. Onboarding
+
+Don't ask 20 questions during registration.
+
+### Step 1
+
+```text
+Name
+Mobile / Email
+```
+
+### Step 2
+
+```text
+Country / region
+```
+
+### Step 3
+
+```text
+Language
+```
+
+### Step 4
+
+```text
+Travel preferences
+
+🚶 Walking
+♿ Accessibility
+💰 Cheapest
+⚡ Fastest
+🌱 Eco-friendly
+```
+
+### Step 5
+
+```text
+Done
+```
+
+Then the frontend receives:
+
+```text
+user.role
+user.country
+user.preferences
+user.accessibility
+```
+
+and determines the experience.
+
+---
+
+# 6. Important UX rule
+
+Don't do:
+
+```text
+if foreign:
+    completely different application
+```
+
+Do:
+
+```text
+Core TransitOne
+      ↓
+UX configuration
+      ↓
+Passenger experience
+      OR
+Visitor experience
+```
+
+This avoids duplicate code.
+
+---
+
+# 7. Adaptive UX engine
+
+Create:
+
+```text
+adaptiveUX/
+```
+
+It determines:
+
+```text
+layout density
+font scale
+navigation style
+information complexity
+voice controls
+map behaviour
+button sizes
+```
+
+Inputs:
+
+```text
+age preference
+accessibility
+language
+visitor status
+device
+travel context
+```
+
+Example:
+
+```text
+UXProfile {
+  density: "comfortable",
+  fontScale: "large",
+  navigation: "simple",
+  voiceEnabled: true,
+  highContrast: true
+}
+```
+
+---
+
+# 8. Passenger navigation
+
+Mobile:
+
+```text
+┌───────────────────────┐
+│ TransitOne             │
+│                        │
+│ Home                  │
+│ Search                │
+│ Trips                 │
+│ Wallet                │
+│ Profile               │
+└───────────────────────┘
+```
+
+Desktop:
+
+```text
+Sidebar
+│
+├── Home
+├── Plan Journey
+├── My Trips
+├── Tickets
+├── Wallet
+├── Rewards
+└── Profile
+```
+
+---
+
+# 9. Passenger Home
+
+This is the most important screen.
+
+```text
+Good morning 👋
+
+Where do you want to go?
+
+[ Search destination ]
+
+📍 Current location
+
+──────────────
+
+Recent destinations
+
+🏠 Home
+🎓 College
+💼 Office
+
+──────────────
+
+Your usual journey
+
+Home → College
+
+42 min
+₹28
+
+🟢 On time
+
+[ Start Journey ]
+```
+
+The homepage should prioritize **destination**, not transport operators.
+
+The user shouldn't need to decide:
+
+> "Should I open bus or railway?"
+
+TransitOne decides that.
+
+---
+
+# 10. Search component
+
+Create a reusable:
+
+```text
+<DestinationSearch />
+```
+
+It should support:
+
+* stop
+* station
+* address
+* landmark
+* airport
+* tourist attraction
+* saved location
+
+Example:
+
+```text
+Search:
+"airport"
+
+Results:
+
+✈️ Chennai International Airport
+🚉 Airport Metro Station
+📍 Airport Road
+```
+
+---
+
+# 11. Journey planner
+
+User enters:
+
+```text
+From:
+Current location
+
+To:
+Office
+
+Date:
+Today
+
+Time:
+Leave now
+```
+
+Optional:
+
+```text
+Preferences
+
+☑ Avoid stairs
+☑ Less walking
+☐ Cheapest
+☐ Fastest
+```
+
+Then:
+
+```text
+[ Find best routes ]
+```
+
+---
+
+# 12. Search loading experience
+
+Never show a blank screen.
+
+Show:
+
+```text
+Finding the best routes...
+
+✓ Checking public transport
+✓ Comparing fares
+✓ Checking transfers
+○ Checking disruptions
+○ Optimizing journey
+```
+
+This makes the system feel intelligent.
+
+---
+
+# 13. Results page
+
+This is where your current MVP concept remains.
+
+Your existing plan calls for fastest, cheapest and least-walking journey cards. 
+
+Expand that into:
+
+```text
+BEST OPTIONS
+
+⚡ Fastest
+42 min
+₹32
+
+💰 Cheapest
+51 min
+₹18
+
+🚶 Least walking
+45 min
+₹28
+
+🌱 Greenest
+47 min
+₹25
+
+🛡 Most reliable
+49 min
+₹30
+```
+
+---
+
+# 14. Journey card
+
+Every journey card:
+
+```text
+┌──────────────────────────────┐
+│ ⚡ FASTEST                   │
+│                              │
+│ 42 min          ₹32          │
+│                              │
+│ 🚶 → 🚌 → 🚇 → 🚶           │
+│                              │
+│ Walk       400m              │
+│ Bus        18 min            │
+│ Metro      14 min            │
+│ Walk       300m              │
+│                              │
+│ 🟢 Reliable                  │
+│ 🌱 1.4kg CO₂ saved           │
+│                              │
+│ [ View Journey ]             │
+└──────────────────────────────┘
+```
+
+---
+
+# 15. Journey detail
+
+When clicked:
+
+```text
+Journey Details
+
+09:10
+📍 Home
+
+↓ 5 min walk
+
+09:15
+🚌 Bus 42A
+
+↓ 18 min
+
+09:33
+🚇 Metro Blue
+
+↓ 14 min
+
+09:47
+🚶 Walk
+
+09:52
+📍 Office
+```
+
+Actions:
+
+```text
+[ Book Journey ]
+[ Save Journey ]
+[ Share Journey ]
+```
+
+---
+
+# 16. Map
+
+Your existing frontend plan already calls for Leaflet and drawing itinerary paths. 
+
+Make the map component reusable:
+
+```text
+<TransitMap />
+```
+
+It supports:
+
+* current location
+* stops
+* stations
+* route
+* walking path
+* vehicle location
+* transfer points
+* alerts
+
+Don't put routing logic inside the map.
+
+Map receives:
+
+```text
+route
+segments
+markers
+```
+
+and only renders them.
+
+---
+
+# 17. Booking flow
+
+Don't immediately charge after a button click.
+
+Use:
+
+```text
+Journey
+ ↓
+Booking confirmation
+ ↓
+Fare breakdown
+ ↓
+Payment method
+ ↓
+Confirm
+ ↓
+Booking processing
+ ↓
+Ticket
+```
+
+---
+
+# 18. Booking confirmation
+
+```text
+Review your journey
+
+Home → Office
+
+🚌 Bus 42A
+₹12
+
+🚇 Metro
+₹20
+
+────────────
+
+Total
+₹32
+
+Payment:
+TransitOne Wallet
+
+[ Confirm & Book ]
+```
+
+---
+
+# 19. Ticket screen
+
+Your existing plan already defines a unified ticket concept. 
+
+Make this visually strong.
+
+```text
+┌──────────────────────────────┐
+│       TRANSITONE             │
+│                              │
+│ Ticket ID                    │
+│ TX-482931                    │
+│                              │
+│ HOME → OFFICE                │
+│                              │
+│ 🚌 Bus 42A                   │
+│ 🚇 Metro Blue                │
+│                              │
+│ ₹32                          │
+│                              │
+│ ████████████████             │
+│       QR CODE                │
+│                              │
+│ STATUS: ACTIVE               │
+└──────────────────────────────┘
+```
+
+---
+
+# 20. Live Journey
+
+This should be your flagship screen.
+
+```text
+LIVE JOURNEY
+
+● Home
+│
+│ ✓ Completed
+│
+● Bus 42A
+│
+│ ✓ Completed
+│
+● Metro Blue
+│
+│ 🟢 On time
+│
+○ Office
+```
+
+Show:
+
+```text
+Current location
+Current segment
+Next step
+Expected arrival
+Delay
+```
+
+---
+
+# 21. Automatic rerouting UX
+
+Your existing plan already identifies simulated delay → reroute as the "wow" moment. 
+
+Don't just update the route silently.
+
+Show:
+
+```text
+⚠️ JOURNEY UPDATE
+
+Your Metro is delayed by 15 minutes.
+
+Your current route may make you late.
+
+We found a better route.
+
+OLD
+58 min
+
+NEW
+46 min
+
+You save 12 minutes.
+
+[ Switch to new route ]
+```
+
+This should be a reusable component:
+
+```text
+<RerouteAlert />
+```
+
+---
+
+# 22. Location tracking
+
+Create:
+
+```text
+LocationService
+```
+
+Responsibilities:
+
+* permission
+* GPS
+* accuracy
+* location updates
+* background behaviour where supported
+* geofencing
+* privacy controls
+
+Frontend should never assume:
+
+```text
+GPS = truth
+```
+
+Backend determines actual journey state.
+
+---
+
+# 23. Wallet
+
+Wallet screen:
+
+```text
+₹482.00
+
+Available Balance
+
+[ Add Money ]
+
+Recent transactions
+
+- ₹28
+Office → Home
+Today
+
+- ₹32
+Home → Office
+Yesterday
+
++ ₹50
+Wallet recharge
+```
+
+Add:
+
+```text
+Payment methods
+Auto transit
+Passes
+Refunds
+```
+
+---
+
+# 24. Daily commute
+
+Dedicated feature:
+
+```text
+My Commute
+
+🏠 Home → 💼 Office
+
+Mon–Fri
+8:00 AM
+
+[ Start commute ]
+```
+
+The system can show:
+
+```text
+Usual route
+42 min
+
+Today's route
+45 min
+
+⚠️ Metro delayed
+
+Recommended:
+Bus + Metro
+
+43 min
+```
+
+---
+
+# 25. Rewards
+
+Don't make rewards the primary experience.
+
+Use them to reinforce public transport.
+
+```text
+This week
+
+🚍 8 public transport trips
+🌱 5.2kg CO₂ avoided
+💰 ₹340 saved
+
+🔥 6-day commute streak
+```
+
+---
+
+# 26. Visitor mode
+
+Now the second frontend experience.
+
+The visitor should see:
+
+```text
+🇮🇳 Welcome to India
+
+What would you like to explore?
+
+[ Search a place ]
+
+Explore by:
+
+🏛 History
+🏖 Beaches
+🍛 Food
+🛕 Culture
+🏔 Nature
+🛍 Shopping
+```
+
+---
+
+# 27. Visitor destination screen
+
+Example:
+
+```text
+MAHABALIPURAM
+
+🏛 UNESCO heritage destination
+
+From your location:
+
+🚌 Public transport
+1h 45m
+₹120
+
+🚆 + 🚌
+2h 05m
+₹180
+
+🚕 Taxi
+1h 20m
+₹1,200
+```
+
+Then emphasize:
+
+> **Recommended public transport route**
+
+---
+
+# 28. "Explain my journey"
+
+Every visitor journey gets:
+
+```text
+[ Explain this step ]
+```
+
+Example:
+
+> "Walk to the bus stop outside the station. The bus destination board may be written in Tamil. Show this ticket to the conductor if you need assistance."
+
+This can eventually connect to your AI backend.
+
+---
+
+# 29. Visitor guided navigation
+
+```text
+STEP 2 OF 5
+
+🚶 WALK TO BUS STOP
+
+Distance:
+350m
+
+Estimated:
+5 minutes
+
+Look for:
+🚌 Bus Stop sign
+
+[ Show Map ]
+
+[ I am here ]
+```
+
+Then:
+
+```text
+STEP 3 OF 5
+
+🚌 BOARD BUS
+
+Bus:
+42A
+
+Direction:
+Mahabalipuram
+
+Show your ticket:
+
+[ QR ]
+```
+
+---
+
+# 30. Visitor language system
+
+Implement i18n from day one.
+
+```text
+i18n/
+├── en.json
+├── hi.json
+├── ta.json
+├── te.json
+├── de.json
+├── fr.json
+└── ja.json
+```
+
+Don't hard-code:
+
+```text
+"Search destination"
+```
+
+Use:
+
+```text
+t("search.destination")
+```
+
+This will save you a massive rewrite later.
+
+---
+
+# 31. Visitor offline mode
+
+Create:
+
+```text
+Download Journey
+```
+
+Store:
+
+* itinerary
+* ticket
+* essential map
+* station information
+* transfer instructions
+* emergency information
+
+Use IndexedDB.
+
+When offline:
+
+```text
+You're offline.
+
+Your downloaded journey is still available.
+```
+
+---
+
+# 32. Visitor assistance center
+
+```text
+Need Help?
+
+🧭 Where am I?
+🎫 Show my ticket
+🚉 Find station
+🏨 Find my hotel
+🆘 Emergency
+🗣 Translation
+📍 Share location
+```
+
+This should be accessible from every visitor journey screen.
+
+---
+
+# 33. Employee frontend
+
+This should **not** use the passenger bottom navigation.
+
+Employee shell:
+
+```text
+┌──────────────────────────────────────────┐
+│ TransitOne Operations                    │
+├─────────────┬────────────────────────────┤
+│ Dashboard   │                            │
+│ Routes      │        CONTENT             │
+│ Vehicles    │                            │
+│ Alerts      │                            │
+│ Incidents   │                            │
+│ Employees   │                            │
+│ Reports     │                            │
+└─────────────┴────────────────────────────┘
+```
+
+---
+
+# 34. Employee dashboard
+
+```text
+Operations Overview
+
+Active vehicles       1,482
+Delayed                   23
+Cancelled                  4
+Critical incidents        2
+
+────────────────────────────
+
+LIVE NETWORK
+
+🟢 92% Normal
+🟡 7% Delayed
+🔴 1% Critical
+```
+
+---
+
+# 35. Employee alert creation
+
+```text
+Create Service Alert
+
+Operator:
+Metro
+
+Route:
+Blue Line
+
+Severity:
+Medium
+
+Issue:
+Signal failure
+
+Expected delay:
+15 min
+
+Affected stations:
+A
+B
+C
+
+Message:
+[________________]
+
+[ Preview ]
+[ Publish Alert ]
+```
+
+After publishing:
+
+```text
+Employee
+ ↓
+Backend
+ ↓
+Affected journeys
+ ↓
+Passenger notification
+ ↓
+Rerouting
+```
+
+---
+
+# 36. Employee incident screen
+
+```text
+Incident #INC-8291
+
+Signal failure
+
+Status:
+INVESTIGATING
+
+Affected:
+Blue Line
+
+Started:
+14:42
+
+Passengers affected:
+1,824
+
+Actions:
+
+[ Notify passengers ]
+[ Update status ]
+[ Create alternative ]
+[ Resolve incident ]
+```
+
+---
+
+# 37. Employee vehicle screen
+
+```text
+Vehicles
+
+Vehicle ID
+Route
+Driver
+Status
+Location
+
+BUS-421
+42A
+Assigned
+🟢 Active
+
+BUS-422
+42A
+Assigned
+🟡 Delayed
+```
+
+Map view:
+
+```text
+vehicle location
++
+route
++
+incident
++
+station
+```
+
+---
+
+# 38. Frontend design system
+
+This is mandatory.
+
+Create:
+
+```text
+components/ui/
+
+Button
+Input
+Select
+Card
+Badge
+Modal
+Drawer
+Toast
+Tabs
+Dropdown
+Tooltip
+Skeleton
+Spinner
+Alert
+```
+
+Then domain components:
+
+```text
+components/journey/
+
+JourneyCard
+JourneyTimeline
+JourneySegment
+TransportIcon
+FareBreakdown
+RerouteAlert
+
+components/ticket/
+
+TicketCard
+QRCode
+TicketStatus
+
+components/map/
+
+TransitMap
+VehicleMarker
+StationMarker
+RouteLayer
+```
+
+---
+
+# 39. Design tokens
+
+Define centrally:
+
+```text
+spacing
+font sizes
+border radius
+shadows
+breakpoints
+animation duration
+```
+
+Don't let developers write random values everywhere.
+
+Bad:
+
+```text
+margin: 13px
+```
+
+Good:
+
+```text
+spacing-md
+```
+
+This is how you maintain visual consistency across a large team.
+
+---
+
+# 40. Responsive strategy
+
+Design mobile-first.
+
+### Mobile
+
+Primary:
+
+```text
+bottom navigation
+cards
+full-screen map
+large buttons
+```
+
+### Tablet
+
+```text
+split map + journey
+```
+
+### Desktop
+
+```text
+sidebar
+content
+map
+```
+
+Employee portal can be desktop-first because operations staff generally need dashboards and tables.
+
+---
+
+# 41. Accessibility
+
+Don't build accessibility later.
+
+Implement:
+
+* keyboard navigation
+* screen-reader labels
+* high contrast
+* scalable text
+* reduced motion
+* large touch targets
+* voice guidance
+* clear focus states
+* semantic HTML
+
+The accessibility preferences should influence the UI and journey results.
+
+---
+
+# 42. Error handling
+
+Every screen needs:
+
+### Loading
+
+```text
+Finding routes...
+```
+
+### Empty
+
+```text
+No routes found.
+
+Try a nearby destination.
+```
+
+### Error
+
+```text
+We couldn't load journey information.
+
+[ Try again ]
+```
+
+### Offline
+
+```text
+You're offline.
+
+Showing saved information.
+```
+
+Your existing frontend deliverables already require loading, empty and error states instead of dead-end screens. 
+
+---
+
+# 43. API layer
+
+Never call fetch directly inside components.
+
+Bad:
+
+```text
+JourneyCard → fetch()
+```
+
+Use:
+
+```text
+Component
+ ↓
+Hook
+ ↓
+Service
+ ↓
+API client
+ ↓
+Backend
+```
+
+Example:
+
+```text
+useJourneySearch()
+      ↓
+journeyService.search()
+      ↓
+apiClient.post()
+```
+
+This makes backend changes manageable.
+
+---
+
+# 44. API contract
+
+The existing MVP contract has:
+
+```text
+GET /stops
+POST /journeys/search
+POST /tickets/book
+GET /wallet
+GET /tickets/:id/live
+POST /simulate/delay
+GET /lines/:id/crowd
+```
+
+
+
+Keep these concepts but eventually evolve toward:
+
+```text
+/api/v1/auth
+/api/v1/users
+/api/v1/operators
+
+/api/v1/stops
+/api/v1/stations
+/api/v1/routes
+
+/api/v1/journeys/search
+/api/v1/journeys/:id
+
+/api/v1/bookings
+/api/v1/tickets
+
+/api/v1/wallet
+/api/v1/payments
+
+/api/v1/live
+/api/v1/alerts
+
+/api/v1/visitor
+/api/v1/rewards
+
+/api/v1/employee
+/api/v1/incidents
+```
+
+---
+
+# 45. Frontend state architecture
+
+Use three categories.
+
+### Server state
+
+TanStack Query:
+
+```text
+journeys
+tickets
+wallet
+alerts
+vehicles
+stations
+routes
+```
+
+### Global client state
+
+Zustand:
+
+```text
+user
+preferences
+UX mode
+location permissions
+```
+
+### Local component state
+
+React:
+
+```text
+modal
+dropdown
+form
+temporary UI state
+```
+
+Don't put everything into Zustand.
+
+---
+
+# 46. Real-time frontend
+
+Production:
+
+```text
+Backend event
+       ↓
+WebSocket / SSE
+       ↓
+Frontend
+       ↓
+Query cache update
+       ↓
+UI
+```
+
+For the hackathon:
+
+```text
+Polling every 5 seconds
+```
+
+is completely acceptable and is already how your current plan approaches live journey updates. 
+
+Build the service abstraction so you can replace:
+
+```text
+polling
+```
+
+with:
+
+```text
+WebSocket
+```
+
+without rewriting the screens.
+
+---
+
+# 47. PWA
+
+Make the passenger/visitor application a PWA.
+
+Capabilities:
+
+```text
+Install
+Offline ticket
+Cached journey
+Fast startup
+Push notifications
+```
+
+Don't make the employee dashboard offline-first unless there's an actual operational requirement.
+
+---
+
+# 48. Notifications
+
+Frontend notification center:
+
+```text
+Notifications
+
+⚠️ Metro delay
+Your journey is affected.
+
+🎫 Ticket confirmed
+TX-48291
+
+🌱 Weekly achievement
+You saved 4.2kg CO₂.
+```
+
+Notification click should deep-link directly to the relevant journey.
+
+---
+
+# 49. Deep linking
+
+Examples:
+
+```text
+/passenger/journey/JR123
+
+/passenger/ticket/TK123
+
+/visitor/journey/JR123
+
+/employee/incidents/INC123
+```
+
+This matters for:
+
+* notifications
+* QR codes
+* shared journeys
+* support
+* browser refresh
+
+---
+
+# 50. Security on frontend
+
+Remember:
+
+### Frontend security ≠ backend security.
+
+Frontend can:
+
+* hide unauthorized UI
+* protect routes
+* expire sessions
+* sanitize display
+* avoid storing secrets
+
+But backend must enforce authorization.
+
+Never put:
+
+```text
+API secret
+payment secret
+operator credential
+```
+
+in frontend code.
+
+---
+
+# 51. Testing strategy
+
+Every feature needs:
+
+### Unit test
+
+```text
+JourneyCard
+FareBreakdown
+UX configuration
+```
+
+### Integration test
+
+```text
+Search → results
+Book → ticket
+Ticket → live journey
+```
+
+### E2E
+
+Test complete user journeys.
+
+---
+
+# 52. E2E scenarios
+
+### Indian user
+
+```text
+Login
+ ↓
+Search
+ ↓
+Compare
+ ↓
+Book
+ ↓
+Wallet deduction
+ ↓
+Ticket
+ ↓
+Live journey
+ ↓
+Delay
+ ↓
+Reroute
+```
+
+### Visitor
+
+```text
+Register
+ ↓
+Visitor mode
+ ↓
+Search attraction
+ ↓
+Plan journey
+ ↓
+Guided navigation
+ ↓
+Ticket
+ ↓
+Offline mode
+```
+
+### Employee
+
+```text
+Employee login
+ ↓
+Dashboard
+ ↓
+Detect incident
+ ↓
+Publish alert
+ ↓
+Passenger receives update
+```
+
+These three flows should be your **golden test cases**.
+
+---
+
+# 53. Frontend team assignment
+
+If you have 5 frontend developers:
+
+### Developer 1 — Core Passenger
+
+Own:
+
+```text
+Home
+Search
+Results
+Journey detail
+Booking
+```
+
+### Developer 2 — Ticket/Wallet/Trips
+
+Own:
+
+```text
+Tickets
+Wallet
+Trip history
+Rewards
+```
+
+### Developer 3 — Maps/Realtime
+
+Own:
+
+```text
+Map
+Location
+Live journey
+Vehicle
+Rerouting
+Notifications
+```
+
+### Developer 4 — Visitor
+
+Own:
+
+```text
+Visitor onboarding
+Explore
+Guided journey
+Language
+Offline
+Travel assistant
+```
+
+### Developer 5 — Employee
+
+Own:
+
+```text
+Employee login
+Dashboard
+Vehicles
+Routes
+Alerts
+Incidents
+```
+
+### One lead/design owner
+
+If you have someone available, they own:
+
+```text
+Design system
+Architecture
+Shared components
+UX consistency
+Code review
+```
+
+If you have fewer people, combine these workstreams.
+
+---
+
+# 54. Frontend development order
+
+Do **not** develop screens randomly.
+
+## Sprint 0 — Foundation
+
+Build:
+
+```text
+React + TypeScript
+Routing
+API client
+Auth
+Design system
+Theme
+State management
+i18n
+Error handling
+```
+
+---
+
+## Sprint 1 — Passenger core
+
+```text
+Home
+ ↓
+Search
+ ↓
+Results
+ ↓
+Journey detail
+ ↓
+Booking
+ ↓
+Ticket
+```
+
+This creates the first usable vertical slice.
+
+---
+
+## Sprint 2 — Live travel
+
+```text
+Map
+ ↓
+Live journey
+ ↓
+Location
+ ↓
+Delay
+ ↓
+Reroute
+ ↓
+Notifications
+```
+
+This creates your strongest demo feature.
+
+---
+
+## Sprint 3 — Wallet & retention
+
+```text
+Wallet
+ ↓
+Trip history
+ ↓
+Daily commute
+ ↓
+Rewards
+```
+
+---
+
+## Sprint 4 — Visitor
+
+```text
+Visitor onboarding
+ ↓
+Explore
+ ↓
+Guided journey
+ ↓
+Language
+ ↓
+Offline
+ ↓
+Travel assistant
+```
+
+---
+
+## Sprint 5 — Employee
+
+```text
+Employee login
+ ↓
+Dashboard
+ ↓
+Routes
+ ↓
+Vehicles
+ ↓
+Incidents
+ ↓
+Alerts
+```
+
+---
+
+# 55. Frontend Definition of Done
+
+A frontend feature isn't complete until:
+
+```text
+□ Desktop works
+□ Mobile works
+□ Loading state
+□ Empty state
+□ Error state
+□ Offline state where relevant
+□ Accessibility
+□ API integration
+□ TypeScript types
+□ Unit tests
+□ E2E path where critical
+□ Responsive design
+□ Design-system components
+□ No hardcoded API URLs
+□ No secrets
+```
+
+---
+
+# 56. Frontend-to-backend contract rule
+
+This is where your previous plan was good and should be retained.
+
+Your current documents explicitly say the frontend can build against `mockApi.js` using the exact API shapes before the backend is finished. 
+
+Keep that.
+
+Build:
+
+```text
+services/api/
+     │
+     ├── realApi.ts
+     └── mockApi.ts
+```
+
+Then:
+
+```text
+API_MODE=mock
+```
+
+or:
+
+```text
+API_MODE=production
+```
+
+The components don't change.
+
+---
+
+# 57. Frontend project governance
+
+Create these files:
+
+```text
+README.md
+ARCHITECTURE.md
+API_CONTRACT.md
+DESIGN_SYSTEM.md
+UX_RULES.md
+CONTRIBUTING.md
+ENVIRONMENT.md
+```
+
+Every developer reads them before coding.
+
+---
+
+# 58. Git structure
+
+Use:
+
+```text
+main
+ │
+ ├── develop
+ │
+ ├── feature/passenger-search
+ ├── feature/live-journey
+ ├── feature/visitor-mode
+ ├── feature/employee-dashboard
+ └── feature/design-system
+```
+
+Never let five developers directly edit `main`.
+
+---
+
+# 59. Pull request rules
+
+Every PR should answer:
+
+```text
+What changed?
+
+Which API does it consume?
+
+Which screens are affected?
+
+Does it require backend changes?
+
+Did mobile get tested?
+
+Did loading/error states get tested?
+
+Are there screenshots/video?
+```
+
+This prevents integration hell.
+
+---
+
+# 60. The frontend's final structure
+
+```text
+                         TRANSITONE FRONTEND
+                                  │
+        ┌─────────────────────────┼─────────────────────────┐
+        │                         │                         │
+        ▼                         ▼                         ▼
+    PASSENGER                   VISITOR                  EMPLOYEE
+        │                         │                         │
+        ▼                         ▼                         ▼
+     Discover                  Explore                  Dashboard
+     Journey                   Guided Trip              Routes
+     Booking                   Language                 Vehicles
+     Tickets                   Offline                  Incidents
+     Wallet                    Assistance               Alerts
+     Trips                     Safety                   Reports
+        │                         │                         │
+        └─────────────────────────┼─────────────────────────┘
+                                  ▼
+                         SHARED DESIGN SYSTEM
+                                  │
+                         SHARED API CLIENT
+                                  │
+                         SHARED STATE LAYER
+                                  │
+                         SHARED AUTH SYSTEM
+                                  │
+                                  ▼
+                           BACKEND PLATFORM
+```
+
+## And the user experience should ultimately feel like this
+
+### Indian user
+
+**"I need to get somewhere."**
+
+```text
+Search destination
+→ Compare
+→ Book
+→ Pay
+→ Travel
+→ Automatically reroute
+```
+
+### Foreign visitor
+
+**"I don't understand India's transport system."**
+
+```text
+Search destination
+→ TransitOne explains the options
+→ Builds complete public-transport journey
+→ Explains every step
+→ Translates it
+→ Provides ticket
+→ Guides them
+→ Works offline
+→ Handles disruption
+```
+
+### Employee
+
+**"Something happened to the transport network."**
+
+```text
+Detect incident
+→ Update operation
+→ Notify affected passengers
+→ Trigger journey recalculation
+→ Track resolution
+```
+
+That gives your frontend a **single coherent product architecture rather than three disconnected UIs**.
+
+And the most important engineering principle for your team is:
+
+> **Build one platform, three experiences, one design system, one API contract, one source of truth.**
+
+That is what will keep the project **consistent, persistent, scalable, and maintainable** as you move from the prototype into real transport integrations.
+   
+
+   please add basic chatbot by speaking it will do task like booking,tracking,etc so that a person who dont want to use interface
+
+   plan for that Yes. This changes the frontend architecture in an important way.
+
+The chatbot should **not be treated as another page**. It should become a **core interaction layer** that sits above the existing UI. A user should be able to either:
+
+> **tap → type → speak → complete the task**
+
+without being forced to navigate through screens.
+
+# TransitOne Revised Frontend Plan
+### Unified transport + voice assistant + adaptive UI
+
+The new frontend architecture becomes:
+
+```text
+                         TRANSITONE
+                             │
+             ┌───────────────┼────────────────┐
+             │               │                │
+             ▼               ▼                ▼
+        VISUAL UI        VOICE ASSISTANT    EMPLOYEE UI
+             │               │                │
+             │               ▼                │
+             │         AI TASK ENGINE         │
+             │               │                │
+             └───────────────┼────────────────┘
+                             ▼
+                       SHARED APIs
+                             │
+                     TRANSITONE BACKEND
+```
+
+The key idea:
+
+> **The interface should adapt to the person, not force the person to adapt to the interface.**
+
+---
+
+# 1. New frontend interaction model
+
+Previously:
+
+```text
+User
+ ↓
+Home
+ ↓
+Search
+ ↓
+Results
+ ↓
+Journey
+ ↓
+Booking
+```
+
+Now:
+
+```text
+                     USER
+                       │
+           ┌───────────┼───────────┐
+           ▼           ▼           ▼
+          TAP         TYPE        SPEAK
+           │           │           │
+           └───────────┼───────────┘
+                       ▼
+                TASK INTERPRETER
+                       │
+                       ▼
+                 ACTION PLAN
+                       │
+                       ▼
+                 CONFIRMATION
+                       │
+                       ▼
+                    EXECUTE
+                       │
+                       ▼
+                  RESULT/UI
+```
+
+Example:
+
+> "Book me a train from Chennai to Bangalore tomorrow morning."
+
+The user shouldn't need to know where the railway booking page is.
+
+The assistant should:
+
+```text
+Voice
+ ↓
+Understand intent
+ ↓
+Find trains
+ ↓
+Show options
+ ↓
+User confirms
+ ↓
+Book
+ ↓
+Show ticket
+```
+
+---
+
+# 2. Don't make the chatbot fully autonomous
+
+This is important.
+
+For low-risk operations:
+
+```text
+"Show my ticket"
+"Where am I?"
+"Track my bus"
+```
+
+The assistant can execute immediately.
+
+For sensitive actions:
+
+```text
+Book ticket
+Pay money
+Cancel ticket
+Refund
+Transfer money
+```
+
+require confirmation.
+
+Example:
+
+> "I found a 7:20 AM train for ₹640. Should I book it?"
+
+User:
+
+> "Yes."
+
+Then execute.
+
+This prevents accidental transactions.
+
+---
+
+# 3. Voice-first mode
+
+Add a persistent microphone button.
+
+Mobile:
+
+```text
+┌──────────────────────────┐
+│ TransitOne               │
+│                          │
+│ Where do you want to go? │
+│                          │
+│ [ Search destination ]   │
+│                          │
+│                          │
+│                          │
+│                          │
+│                    🎙️    │
+│                          │
+│ Home Search Trips Wallet │
+└──────────────────────────┘
+```
+
+Tap microphone:
+
+```text
+┌──────────────────────────┐
+│                          │
+│        🎙️                │
+│                          │
+│     Listening...         │
+│                          │
+│ "Book a bus to..."       │
+│                          │
+│ [ Cancel ]               │
+└──────────────────────────┘
+```
+
+---
+
+# 4. Voice interaction states
+
+Create a reusable:
+
+```text
+<VoiceAssistant />
+```
+
+with states:
+
+```text
+IDLE
+ ↓
+LISTENING
+ ↓
+PROCESSING
+ ↓
+UNDERSTANDING
+ ↓
+CONFIRMATION
+ ↓
+EXECUTING
+ ↓
+SUCCESS
+```
+
+Error:
+
+```text
+ERROR
+ ↓
+RETRY
+```
+
+---
+
+# 5. Voice assistant UI
+
+### Idle
+
+```text
+🎙️ Ask TransitOne
+```
+
+### Listening
+
+```text
+🔴 Listening...
+
+"Book a train to Delhi..."
+```
+
+### Processing
+
+```text
+Understanding your request...
+```
+
+### Confirmation
+
+```text
+I found:
+
+🚆 Chennai → Bangalore
+Tomorrow
+7:20 AM
+₹640
+
+Book this train?
+
+[ Yes ] [ No ]
+```
+
+### Success
+
+```text
+✓ Booking confirmed
+
+Ticket:
+TX839291
+
+[ View Ticket ]
+```
+
+---
+
+# 6. Chat interface
+
+Voice alone isn't enough.
+
+Some users will speak but want to **see what the system understood**.
+
+Create:
+
+```text
+AssistantDrawer
+```
+
+Example:
+
+```text
+┌───────────────────────────────┐
+│ TransitOne Assistant       ×  │
+│                               │
+│ You:                          │
+│ "Track my bus."               │
+│                               │
+│ TransitOne:                   │
+│ Your Bus 42A is 4 minutes     │
+│ away.                         │
+│                               │
+│ 📍 1.2 km away                │
+│ 🕐 ETA 8:42 AM                │
+│                               │
+│              🎙️               │
+│ [ Type a message... ]         │
+└───────────────────────────────┘
+```
+
+So the system becomes:
+
+> **Voice + chat + visual confirmation.**
+
+---
+
+# 7. Assistant should perform tasks
+
+Don't build a chatbot that only answers:
+
+> "What is the fare?"
+
+Build a **task-oriented assistant**.
+
+The assistant needs an intent/action layer.
+
+```text
+User speech
+     ↓
+Intent
+     ↓
+Entities
+     ↓
+Task
+     ↓
+Backend API
+```
+
+Example:
+
+```text
+"Track my bus"
+
+Intent:
+TRACK_JOURNEY
+
+Entity:
+activeJourney = true
+```
+
+Then:
+
+```text
+TRACK_JOURNEY
+       ↓
+GET /journeys/current
+       ↓
+GET realtime status
+       ↓
+Display result
+```
+
+---
+
+# 8. Supported voice tasks — MVP
+
+Start with these.
+
+### Search
+
+> "Find buses to Chennai."
+
+### Journey planning
+
+> "How do I get to the airport?"
+
+### Booking
+
+> "Book the cheapest bus to Bangalore."
+
+### Ticket
+
+> "Show my ticket."
+
+### Tracking
+
+> "Where is my bus?"
+
+### Journey status
+
+> "Am I going to reach on time?"
+
+### Rerouting
+
+> "Find another route."
+
+### Wallet
+
+> "What's my wallet balance?"
+
+### Trip history
+
+> "Show my last trip."
+
+### Cancellation
+
+> "Cancel my ticket."
+
+But cancellation must require confirmation.
+
+---
+
+# 9. Voice commands for daily commuters
+
+This is where the product gets interesting.
+
+User:
+
+> "I'm going to office."
+
+Assistant:
+
+```text
+Your usual route is available.
+
+Home → Office
+
+42 minutes
+₹28
+
+Metro is currently on time.
+
+[ Start Journey ]
+```
+
+User:
+
+> "Start it."
+
+Then the journey begins.
+
+---
+
+# 10. Proactive assistant
+
+Eventually:
+
+```text
+7:30 AM
+
+Good morning.
+
+Your usual 8:00 AM journey has
+a 12-minute delay.
+
+I found another route.
+
+Would you like to take it?
+```
+
+This is significantly better than making the user constantly check the app.
+
+---
+
+# 11. Voice for older users
+
+This should be a **first-class accessibility feature**, not a separate application.
+
+Old/simplified mode:
+
+```text
+┌───────────────────────────┐
+│ Good Morning              │
+│                           │
+│ 🎙️                         │
+│                           │
+│ Say where you want to go  │
+│                           │
+│                           │
+│ [ My Tickets ]            │
+│                           │
+│ [ My Trips ]              │
+│                           │
+│ [ Help ]                  │
+└───────────────────────────┘
+```
+
+Large:
+
+- buttons
+- text
+- touch targets
+- voice controls
+
+Minimal:
+
+- animation
+- clutter
+- tiny icons
+- complex menus
+
+---
+
+# 12. Gen Z interface
+
+Gen Z mode can be more dynamic:
+
+```text
+Good morning 🔥
+
+Where are we going?
+
+🎙️ "Take me to college"
+
+────────────────
+
+⚡ Fastest
+42 min
+
+💸 ₹24
+
+🌱 1.1kg CO₂ saved
+
+────────────────
+
+Your streak 🔥
+7 days
+```
+
+Use:
+
+- quick actions
+- cards
+- personalization
+- journey streaks
+- rewards
+- visual maps
+- shareable trips
+- contextual notifications
+
+But don't turn a transport application into a social-media clone.
+
+**Utility comes first.**
+
+---
+
+# 13. Visitor voice mode
+
+This is potentially one of the strongest features.
+
+Foreign visitor:
+
+> "How do I get to the Taj Mahal?"
+
+Assistant:
+
+```text
+You are in Delhi.
+
+The easiest public transport route is:
+
+🚇 Metro
+→ 🚆 Train
+→ 🚌 Local transport
+
+Approx:
+3h 20m
+
+Estimated cost:
+₹XXX
+
+I can guide you step-by-step.
+
+[ Start Guided Journey ]
+```
+
+Then during travel:
+
+> "What do I do now?"
+
+Assistant:
+
+> "Walk to platform 3. Your train leaves in 8 minutes."
+
+---
+
+# 14. Visitor language interaction
+
+Allow:
+
+```text
+English
+Hindi
+Tamil
+Telugu
+Kannada
+Bengali
+Marathi
+...
+```
+
+And international languages:
+
+```text
+German
+French
+Spanish
+Japanese
+Korean
+```
+
+The user can speak in their preferred language.
+
+The interface responds in that language.
+
+---
+
+# 15. Voice translation assistance
+
+Potential future feature:
+
+```text
+Visitor:
+"How do I ask where platform 4 is?"
+
+TransitOne:
+"Show this to station staff."
+
+"Platform 4 எங்கே உள்ளது?"
+```
+
+But this should be positioned as assistance, not guaranteed professional translation.
+
+---
+
+# 16. Unified assistant architecture
+
+Frontend:
+
+```text
+src/features/assistant/
+
+├── Assistant.tsx
+├── VoiceButton.tsx
+├── VoiceOverlay.tsx
+├── ChatPanel.tsx
+├── MessageList.tsx
+├── TaskConfirmation.tsx
+├── TaskProgress.tsx
+├── AssistantResult.tsx
+├── useVoiceAssistant.ts
+├── useAssistant.ts
+└── assistantTypes.ts
+```
+
+---
+
+# 17. Assistant shouldn't directly access backend
+
+Bad:
+
+```text
+VoiceAssistant
+      ↓
+POST /booking
+```
+
+Instead:
+
+```text
+VoiceAssistant
+      ↓
+Intent/Task Layer
+      ↓
+Action Executor
+      ↓
+Backend API
+```
+
+This gives you centralized safety.
+
+---
+
+# 18. Frontend assistant architecture
+
+```text
+                 USER
+                  │
+           Voice / Text
+                  │
+                  ▼
+             Assistant UI
+                  │
+                  ▼
+            Intent Result
+                  │
+                  ▼
+             Task Manager
+                  │
+       ┌──────────┼──────────┐
+       ▼          ▼          ▼
+    Journey    Booking     Tracking
+       │          │          │
+       └──────────┼──────────┘
+                  ▼
+              API Layer
+                  │
+              Backend
+```
+
+---
+
+# 19. Intent model
+
+Create a shared TypeScript type:
+
+```text
+AssistantIntent
+
+SEARCH_TRANSPORT
+PLAN_JOURNEY
+BOOK_TICKET
+TRACK_JOURNEY
+SHOW_TICKET
+SHOW_WALLET
+CANCEL_BOOKING
+REROUTE_JOURNEY
+SHOW_TRIPS
+GET_FARE
+GET_STATUS
+HELP
+```
+
+---
+
+# 20. Task state
+
+```text
+Task
+
+id
+intent
+status
+parameters
+confirmationRequired
+result
+error
+createdAt
+```
+
+Example:
+
+```text
+{
+  intent: "BOOK_TICKET",
+  status: "WAITING_CONFIRMATION",
+  parameters: {
+    origin: "Chennai",
+    destination: "Bangalore",
+    date: "tomorrow"
+  }
+}
+```
+
+---
+
+# 21. Confirmation architecture
+
+Every task declares:
+
+```text
+riskLevel
+```
+
+Example:
+
+```text
+SHOW_TICKET
+LOW
+
+TRACK_JOURNEY
+LOW
+
+SEARCH
+LOW
+
+BOOK
+HIGH
+
+PAY
+HIGH
+
+CANCEL
+HIGH
+```
+
+Frontend uses:
+
+```text
+if riskLevel === HIGH
+    show confirmation
+```
+
+But the backend must **also enforce authorization and transaction safety**.
+
+---
+
+# 22. Assistant result cards
+
+Don't return walls of text.
+
+If user says:
+
+> "Find buses to Bangalore."
+
+Return:
+
+```text
+┌────────────────────────────┐
+│ 🚌 Best bus options        │
+│                            │
+│ 08:30                      │
+│ ₹480                       │
+│ 6h 20m                     │
+│                            │
+│ [ View ]                   │
+└────────────────────────────┘
+```
+
+The assistant becomes a bridge into your normal UI.
+
+---
+
+# 23. Deep integration with existing screens
+
+Voice doesn't replace your existing screens.
+
+Example:
+
+```text
+Voice:
+"Show my ticket."
+
+        ↓
+
+Assistant
+
+        ↓
+
+Ticket API
+
+        ↓
+
+Navigate to:
+
+/passenger/ticket/TX123
+```
+
+Another:
+
+```text
+Voice:
+"Track my bus."
+
+        ↓
+
+Live Journey
+
+        ↓
+
+/passenger/journey/JR123/live
+```
+
+This is critical.
+
+**Don't rebuild every feature inside the chatbot.**
+
+---
+
+# 24. Assistant quick actions
+
+When assistant opens:
+
+```text
+What can I help with?
+
+🎫 My ticket
+📍 Track journey
+🚌 Find transport
+💳 Wallet
+🔄 Find alternate route
+🎙️ Speak
+```
+
+This helps users who don't know what they can ask.
+
+---
+
+# 25. Context-aware assistant
+
+The assistant should know the current frontend context.
+
+If user is on ticket:
+
+```text
+Assistant:
+"What would you like to do with this ticket?"
+```
+
+Options:
+
+```text
+Track
+Share
+Cancel
+View journey
+```
+
+If user is travelling:
+
+```text
+Assistant:
+"You're currently travelling to Office."
+
+"How can I help?"
+```
+
+This is much better than a generic chatbot.
+
+---
+
+# 26. Journey context
+
+Assistant context:
+
+```text
+currentUser
+currentJourney
+currentLocation
+activeTicket
+currentScreen
+language
+UXProfile
+```
+
+Then:
+
+> "How long?"
+
+could mean:
+
+> "How long until I reach my destination?"
+
+instead of forcing the user to explain everything again.
+
+---
+
+# 27. Voice permission flow
+
+First time:
+
+```text
+TransitOne wants
+microphone access.
+
+[ Allow ]
+[ Not now ]
+```
+
+If denied:
+
+```text
+Voice isn't available.
+
+You can type instead.
+```
+
+Never block the application.
+
+---
+
+# 28. Network failure
+
+If voice service fails:
+
+```text
+Voice service unavailable.
+
+You can:
+
+[ Type instead ]
+
+or
+
+[ Try again ]
+```
+
+The core application must continue working.
+
+---
+
+# 29. Assistant loading state
+
+Instead of:
+
+```text
+Loading...
+```
+
+Use:
+
+```text
+🎙️ Processing
+
+Understanding your request...
+Checking transport...
+Finding the best option...
+```
+
+But don't fake progress if those stages aren't actually happening.
+
+---
+
+# 30. Frontend state architecture — revised
+
+Your state structure becomes:
+
+```text
+Global State
+│
+├── Auth
+├── User
+├── UXProfile
+├── Assistant
+├── Location
+└── Preferences
+```
+
+Server state:
+
+```text
+TanStack Query
+│
+├── Journeys
+├── Tickets
+├── Wallet
+├── Routes
+├── Vehicles
+├── Alerts
+└── Assistant task results
+```
+
+Local state:
+
+```text
+React
+│
+├── Forms
+├── Modals
+├── Filters
+└── Temporary UI
+```
+
+---
+
+# 31. Revised frontend folder structure
+
+I would now use:
+
+```text
+src/
+│
+├── app/
+│   ├── router/
+│   ├── providers/
+│   └── config/
+│
+├── features/
+│
+│   ├── auth/
+│   ├── onboarding/
+│   ├── adaptiveUX/
+│   │
+│   ├── assistant/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   ├── state/
+│   │   └── types/
+│   │
+│   ├── discovery/
+│   ├── journey/
+│   ├── booking/
+│   ├── tickets/
+│   ├── wallet/
+│   ├── liveJourney/
+│   ├── visitor/
+│   ├── employee/
+│   ├── notifications/
+│   ├── rewards/
+│   └── profile/
+│
+├── components/
+│   ├── ui/
+│   ├── map/
+│   ├── transport/
+│   └── common/
+│
+├── services/
+│   ├── api/
+│   ├── voice/
+│   ├── location/
+│   └── notifications/
+│
+├── store/
+│
+├── types/
+│
+├── utils/
+│
+├── i18n/
+│
+└── styles/
+```
+
+---
+
+# 32. New frontend component library
+
+Add:
+
+```text
+AssistantButton
+VoiceOverlay
+VoiceWaveform
+AssistantDrawer
+AssistantMessage
+AssistantInput
+TaskConfirmation
+TaskProgress
+TaskResult
+QuickAction
+VoicePermission
+```
+
+These must be shared across Passenger and Visitor modes.
+
+---
+
+# 33. Frontend service architecture
+
+```text
+services/
+│
+├── api/
+│   ├── apiClient.ts
+│   ├── authApi.ts
+│   ├── journeyApi.ts
+│   ├── bookingApi.ts
+│   ├── ticketApi.ts
+│   ├── walletApi.ts
+│   └── assistantApi.ts
+│
+├── voice/
+│   ├── speechRecognition.ts
+│   ├── speechSynthesis.ts
+│   └── voiceManager.ts
+│
+└── location/
+    └── locationManager.ts
+```
+
+---
+
+# 34. Speech architecture
+
+Keep speech recognition separate from AI/task execution.
+
+```text
+Microphone
+ ↓
+Speech Recognition
+ ↓
+Text
+ ↓
+Assistant
+ ↓
+Intent
+ ↓
+Action
+```
+
+And response:
+
+```text
+Action result
+ ↓
+Text response
+ ↓
+Text-to-Speech
+ ↓
+Speaker
+```
+
+This allows you to replace the speech provider later without rewriting your assistant.
+
+---
+
+# 35. Voice feedback
+
+After user speaks:
+
+```text
+You said:
+
+"Book the cheapest bus to Bangalore."
+
+[ Edit ]
+```
+
+Then:
+
+```text
+I understood:
+
+Destination: Bangalore
+Preference: Cheapest
+Mode: Bus
+```
+
+This dramatically reduces misunderstandings.
+
+---
+
+# 36. Ambiguous command handling
+
+User:
+
+> "Book me a bus."
+
+Assistant:
+
+> "Sure. Where are you travelling to?"
+
+User:
+
+> "Bangalore."
+
+Assistant:
+
+> "When would you like to travel?"
+
+User:
+
+> "Tomorrow morning."
+
+Assistant:
+
+> "I found three options."
+
+This is a **multi-turn task**.
+
+The frontend needs to maintain:
+
+```text
+TaskContext
+```
+
+until the task finishes.
+
+---
+
+# 37. Don't ask unnecessary questions
+
+If the system already knows:
+
+```text
+current location
+saved destination
+usual commute
+```
+
+User:
+
+> "Take me to office."
+
+It should infer:
+
+```text
+origin = current location
+destination = saved Office
+```
+
+Then ask only what's missing.
+
+---
+
+# 38. Assistant memory within session
+
+Example:
+
+User:
+
+> "Find buses to Bangalore."
+
+Assistant:
+
+> "Here are the options."
+
+User:
+
+> "Cheapest one."
+
+Assistant understands:
+
+```text
+previousTask = search buses Bangalore
+newPreference = cheapest
+```
+
+No need for the user to repeat everything.
+
+---
+
+# 39. Voice booking UX
+
+Full flow:
+
+```text
+User:
+"Book the cheapest bus to Bangalore tomorrow morning."
+
+             ↓
+
+Assistant:
+"I found three buses."
+
+             ↓
+
+Cards displayed
+
+             ↓
+
+Assistant:
+"The cheapest is 6:40 AM for ₹480."
+
+             ↓
+
+User:
+"Book it."
+
+             ↓
+
+Assistant:
+"You're about to pay ₹480.
+Confirm?"
+
+             ↓
+
+User:
+"Yes."
+
+             ↓
+
+Backend booking
+
+             ↓
+
+Assistant:
+"Done. Your ticket is ready."
+
+             ↓
+
+[ View Ticket ]
+```
+
+This is your ideal demo.
+
+---
+
+# 40. Tracking UX
+
+User:
+
+> "Where's my bus?"
+
+Assistant:
+
+```text
+Your Bus 42A is:
+
+📍 1.2 km away
+🕐 Arriving in 4 minutes
+
+You're currently 350m
+from the stop.
+
+[ Track Live ]
+```
+
+Then opens the live map.
+
+---
+
+# 41. Voice rerouting
+
+User:
+
+> "Is my journey delayed?"
+
+Assistant:
+
+```text
+Yes.
+
+Your Metro is delayed 15 minutes.
+
+I found another route
+that is 11 minutes faster.
+
+Should I switch you?
+```
+
+User:
+
+> "Yes."
+
+Assistant:
+
+```text
+Done.
+
+Your new route is active.
+```
+
+---
+
+# 42. Voice for employee portal
+
+This can be added later.
+
+Employee:
+
+> "Show me delayed buses."
+
+Assistant:
+
+```text
+23 buses are currently delayed.
+
+Top affected routes:
+
+42A — 12 min
+19B — 9 min
+88 — 21 min
+```
+
+Employee:
+
+> "Create an alert for route 88."
+
+Assistant:
+
+```text
+Route 88 is delayed by 21 minutes.
+
+What message should passengers receive?
+```
+
+Then employee dictates the message.
+
+But employee voice actions require stronger authorization.
+
+---
+
+# 43. Accessibility architecture
+
+Create:
+
+```text
+AccessibilityProvider
+```
+
+Controls:
+
+```text
+fontScale
+contrast
+motion
+voice
+screenReader
+touchSize
+simplifiedMode
+```
+
+Every major component should respect these settings.
+
+---
+
+# 44. Three UI modes
+
+I recommend making these explicit:
+
+### Standard
+
+For most users.
+
+### Simplified
+
+For:
+
+- older users
+- accessibility needs
+- low digital literacy
+
+### Explorer
+
+For visitors.
+
+Then:
+
+```text
+UXProfile
+     ↓
+Mode
+```
+
+Gen Z shouldn't necessarily be a separate "mode."
+
+Use personalization within Standard.
+
+---
+
+# 45. Frontend implementation phases — revised
+
+## Phase 0 — Foundation
+
+Build:
+
+```text
+React
+TypeScript
+Router
+API client
+TanStack Query
+Zustand
+Design system
+i18n
+Accessibility system
+```
+
+---
+
+# 46. Phase 1 — Core passenger
+
+```text
+Login
+ ↓
+Onboarding
+ ↓
+Home
+ ↓
+Search
+ ↓
+Journey
+ ↓
+Booking
+ ↓
+Ticket
+```
+
+---
+
+# 47. Phase 2 — Live journey
+
+```text
+Map
+ ↓
+Location
+ ↓
+Tracking
+ ↓
+Delay
+ ↓
+Rerouting
+ ↓
+Notifications
+```
+
+---
+
+# 48. Phase 3 — Assistant foundation
+
+Build:
+
+```text
+Assistant button
+Voice permission
+Speech-to-text
+Text chat
+Intent display
+Task context
+```
+
+Start with **read-only tasks**:
+
+```text
+Search
+Track
+Show ticket
+Wallet balance
+Journey status
+```
+
+---
+
+# 49. Phase 4 — Assistant actions
+
+Then:
+
+```text
+Book
+Cancel
+Reroute
+Save journey
+Start commute
+```
+
+Add confirmation gates.
+
+---
+
+# 50. Phase 5 — Visitor assistant
+
+```text
+Visitor mode
+ ↓
+Voice
+ ↓
+Destination discovery
+ ↓
+Guided journey
+ ↓
+Translation
+ ↓
+Offline assistance
+```
+
+---
+
+# 51. Phase 6 — Employee assistant
+
+```text
+Employee
+ ↓
+Voice commands
+ ↓
+Operational information
+ ↓
+Create incident
+ ↓
+Create alert
+```
+
+Keep high-risk administrative actions behind confirmation/MFA/policy controls.
+
+---
+
+# 52. Frontend team allocation
+
+With 6 developers:
+
+| Developer | Ownership |
+|---|---|
+| 1 | Passenger core |
+| 2 | Booking/Ticket/Wallet |
+| 3 | Maps/Realtime |
+| 4 | Assistant/Voice |
+| 5 | Visitor |
+| 6 | Employee |
+| Lead | Design system/architecture |
+
+**Developer 4 should own the assistant completely**, rather than having every developer add random chatbot functionality.
+
+---
+
+# 53. Assistant team responsibilities
+
+They own:
+
+```text
+Voice UI
+Chat UI
+Speech
+Intent display
+Task management
+Confirmation
+Assistant API integration
+Voice accessibility
+Conversation state
+```
+
+They do **not** own:
+
+```text
+Booking business logic
+Wallet logic
+Journey calculation
+```
+
+Those remain backend responsibilities.
+
+---
+
+# 54. Critical security rule
+
+The voice assistant must **never bypass authorization**.
+
+This is dangerous:
+
+```text
+User says:
+"Transfer ₹10,000."
+ ↓
+AI
+ ↓
+Payment API
+```
+
+Instead:
+
+```text
+Voice
+ ↓
+Intent
+ ↓
+Authorization
+ ↓
+Confirmation
+ ↓
+Authentication challenge if required
+ ↓
+Backend transaction
+```
+
+The AI should propose actions.
+
+The backend decides whether they're permitted.
+
+---
+
+# 55. Frontend assistant testing
+
+Test:
+
+### Simple
+
+> "Show my ticket."
+
+### Multi-turn
+
+> "Find a bus."
+
+> "Tomorrow."
+
+> "Cheapest one."
+
+### Ambiguous
+
+> "Book it."
+
+Should ask:
+
+> "Which journey would you like me to book?"
+
+### Dangerous
+
+> "Cancel my ticket."
+
+Should require confirmation.
+
+### Misrecognition
+
+Speech:
+
+> "Chennai"
+
+recognized as:
+
+> "China"
+
+Assistant:
+
+```text
+Did you mean Chennai, India?
+
+[ Yes ] [ No ]
+```
+
+---
+
+# 56. Final frontend architecture
+
+```text
+                              TRANSITONE
+                                  │
+                    ┌─────────────┼─────────────┐
+                    │             │             │
+                    ▼             ▼             ▼
+                PASSENGER      VISITOR      EMPLOYEE
+                    │             │             │
+                    └─────────────┼─────────────┘
+                                  │
+                         SHARED EXPERIENCE
+                                  │
+             ┌────────────────────┼────────────────────┐
+             │                    │                    │
+             ▼                    ▼                    ▼
+          VISUAL UI            CHAT UI             VOICE UI
+             │                    │                    │
+             └────────────────────┼────────────────────┘
+                                  ▼
+                           ASSISTANT LAYER
+                                  │
+                         ┌────────┴────────┐
+                         ▼                 ▼
+                      Intent            Context
+                         │                 │
+                         └────────┬────────┘
+                                  ▼
+                             TASK ENGINE
+                                  │
+                ┌─────────────────┼──────────────────┐
+                ▼                 ▼                  ▼
+             Journey            Booking           Tracking
+                │                 │                  │
+                └─────────────────┼──────────────────┘
+                                  ▼
+                              API LAYER
+                                  │
+                                  ▼
+                          TRANSITONE BACKEND
+```
+
+# The product experience you're actually building
+
+Instead of:
+
+> **"Here's a transportation booking application."**
+
+you are building:
+
+> **"Tell TransitOne what you want to do, and TransitOne handles the complexity."**
+
+A user can say:
+
+**"Take me to college."**
+
+→ TransitOne understands the destination  
+→ checks the network  
+→ finds the best route  
+→ tells them the fare  
+→ starts the journey  
+→ tracks them  
+→ detects delays  
+→ proposes alternatives  
+→ asks for confirmation when money/actions are involved  
+→ shows the ticket  
+→ completes the journey.
+
+For an international visitor:
+
+**"I want to go to the Taj Mahal."**
+
+→ TransitOne understands the destination  
+→ explains India's transport options  
+→ creates the multimodal journey  
+→ explains each transfer  
+→ provides the ticket  
+→ guides them step-by-step  
+→ speaks in their language  
+→ keeps the itinerary available offline.
+
+And for an older passenger who doesn't want to touch the interface:
+
+**"Where is my bus?"**
+
+→ TransitOne simply speaks back with the answer and optionally opens the live map.
+
+That is the right direction. **Don't build a "chatbot feature." Build a conversational control layer over the entire TransitOne platform.**
