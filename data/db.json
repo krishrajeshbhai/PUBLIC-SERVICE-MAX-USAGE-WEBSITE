@@ -1,0 +1,326 @@
+{
+  "stops": [
+    {
+      "id": "stop-1",
+      "name": "Central Station",
+      "lat": 12.9716,
+      "lng": 77.5946,
+      "noStairs": true
+    },
+    {
+      "id": "stop-2",
+      "name": "Tech Park",
+      "lat": 12.9816,
+      "lng": 77.6046,
+      "noStairs": true
+    },
+    {
+      "id": "stop-3",
+      "name": "Residency Road",
+      "lat": 12.9616,
+      "lng": 77.5846,
+      "noStairs": true
+    },
+    {
+      "id": "stop-4",
+      "name": "MG Road",
+      "lat": 12.9736,
+      "lng": 77.6116,
+      "noStairs": true
+    },
+    {
+      "id": "stop-5",
+      "name": "Indiranagar",
+      "lat": 12.9786,
+      "lng": 77.6406,
+      "noStairs": true
+    },
+    {
+      "id": "stop-6",
+      "name": "Halasuru",
+      "lat": 12.9756,
+      "lng": 77.6256,
+      "noStairs": true
+    },
+    {
+      "id": "stop-7",
+      "name": "Trinity",
+      "lat": 12.973,
+      "lng": 77.617,
+      "noStairs": true
+    },
+    {
+      "id": "stop-8",
+      "name": "Cubbon Park",
+      "lat": 12.979,
+      "lng": 77.598,
+      "noStairs": true
+    },
+    {
+      "id": "stop-9",
+      "name": "Vidhana Soudha",
+      "lat": 12.9796,
+      "lng": 77.5906,
+      "noStairs": false
+    },
+    {
+      "id": "stop-10",
+      "name": "Majestic",
+      "lat": 12.9766,
+      "lng": 77.5726,
+      "noStairs": true
+    },
+    {
+      "id": "stop-11",
+      "name": "City Market",
+      "lat": 12.9606,
+      "lng": 77.5736,
+      "noStairs": true
+    },
+    {
+      "id": "stop-12",
+      "name": "Jayanagar",
+      "lat": 12.9296,
+      "lng": 77.5806,
+      "noStairs": true
+    },
+    {
+      "id": "stop-13",
+      "name": "JP Nagar",
+      "lat": 12.91,
+      "lng": 77.585,
+      "noStairs": true
+    },
+    {
+      "id": "stop-14",
+      "name": "Banashankari",
+      "lat": 12.915,
+      "lng": 77.573,
+      "noStairs": true
+    },
+    {
+      "id": "stop-15",
+      "name": "Malleshwaram",
+      "lat": 12.99,
+      "lng": 77.57,
+      "noStairs": true
+    }
+  ],
+  "lines": [
+    {
+      "id": "line-purple",
+      "name": "Purple Line",
+      "mode": "metro",
+      "color": "purple",
+      "stopIds": [
+        "stop-10",
+        "stop-9",
+        "stop-8",
+        "stop-4",
+        "stop-7",
+        "stop-6",
+        "stop-5"
+      ],
+      "hopMinutes": [
+        3,
+        2,
+        3,
+        2,
+        3,
+        4
+      ],
+      "hopCosts": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "noStairs": true
+    },
+    {
+      "id": "line-green",
+      "name": "Green Line",
+      "mode": "metro",
+      "color": "green",
+      "stopIds": [
+        "stop-15",
+        "stop-10",
+        "stop-11",
+        "stop-12",
+        "stop-14",
+        "stop-13"
+      ],
+      "hopMinutes": [
+        4,
+        3,
+        5,
+        4,
+        3
+      ],
+      "hopCosts": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "noStairs": true
+    },
+    {
+      "id": "line-bus-201",
+      "name": "Bus 201",
+      "mode": "bus",
+      "color": "blue",
+      "stopIds": [
+        "stop-1",
+        "stop-3",
+        "stop-4",
+        "stop-2",
+        "stop-5"
+      ],
+      "hopMinutes": [
+        6,
+        8,
+        7,
+        10
+      ],
+      "hopCosts": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "noStairs": true
+    },
+    {
+      "id": "line-bus-500",
+      "name": "Bus 500",
+      "mode": "bus",
+      "color": "orange",
+      "stopIds": [
+        "stop-14",
+        "stop-12",
+        "stop-1",
+        "stop-2",
+        "stop-15"
+      ],
+      "hopMinutes": [
+        8,
+        12,
+        9,
+        14
+      ],
+      "hopCosts": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "noStairs": false
+    }
+  ],
+  "walkEdges": [
+    {
+      "fromStopId": "stop-1",
+      "toStopId": "stop-10",
+      "distanceMeters": 800,
+      "minutes": 10
+    },
+    {
+      "fromStopId": "stop-1",
+      "toStopId": "stop-3",
+      "distanceMeters": 600,
+      "minutes": 7
+    },
+    {
+      "fromStopId": "stop-2",
+      "toStopId": "stop-4",
+      "distanceMeters": 500,
+      "minutes": 6
+    },
+    {
+      "fromStopId": "stop-8",
+      "toStopId": "stop-9",
+      "distanceMeters": 400,
+      "minutes": 5
+    },
+    {
+      "fromStopId": "stop-10",
+      "toStopId": "stop-11",
+      "distanceMeters": 900,
+      "minutes": 11
+    },
+    {
+      "fromStopId": "stop-12",
+      "toStopId": "stop-3",
+      "distanceMeters": 1500,
+      "minutes": 18
+    }
+  ],
+  "wallets": [
+    {
+      "userId": "user-1",
+      "balance": 440
+    }
+  ],
+  "tickets": [
+    {
+      "id": "tkt-1787826594644-29",
+      "journeyOptionId": "jo-fastest-stop-10-stop-5-1787826594640-509",
+      "userId": "user-1",
+      "status": "rerouted",
+      "createdAt": "2026-08-27T10:29:54.644Z",
+      "journeyOption": {
+        "id": "jo-fastest-stop-10-stop-5-1787826594643-495",
+        "type": "fastest",
+        "totalMinutes": 17,
+        "totalCost": 60,
+        "totalWalkMeters": 0,
+        "co2SavedGrams": 1530,
+        "segments": [
+          {
+            "mode": "metro",
+            "lineId": "line-purple",
+            "fromStopId": "stop-10",
+            "toStopId": "stop-5",
+            "minutes": 17,
+            "cost": 60,
+            "crowdLevel": "red"
+          }
+        ]
+      },
+      "reroutedJourneyOption": {
+        "id": "jo-fastest-stop-5-stop-5-1787826594655-11",
+        "type": "fastest",
+        "totalMinutes": 0,
+        "totalCost": 0,
+        "totalWalkMeters": 0,
+        "co2SavedGrams": 0,
+        "segments": []
+      },
+      "alert": "Delay on Purple Line near Vidhana Soudha. Rerouted to destination via fastest path."
+    }
+  ],
+  "walletTxns": [
+    {
+      "id": "txn-1787826594645",
+      "userId": "user-1",
+      "amount": -60,
+      "ticketId": "tkt-1787826594644-29",
+      "timestamp": "2026-08-27T10:29:54.645Z"
+    }
+  ],
+  "delayEvents": [
+    {
+      "id": "delay-1787826594652",
+      "segmentKey": "line-purple+stop-10+stop-9",
+      "lineId": "line-purple",
+      "fromStopId": "stop-10",
+      "toStopId": "stop-9",
+      "delayMinutes": 15,
+      "createdAt": "2026-08-27T10:29:54.652Z"
+    }
+  ]
+}

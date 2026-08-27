@@ -1,0 +1,8 @@
+[
+  { "fromStopId": "stop-1", "toStopId": "stop-10", "distanceMeters": 800, "minutes": 10 },
+  { "fromStopId": "stop-1", "toStopId": "stop-3", "distanceMeters": 600, "minutes": 7 },
+  { "fromStopId": "stop-2", "toStopId": "stop-4", "distanceMeters": 500, "minutes": 6 },
+  { "fromStopId": "stop-8", "toStopId": "stop-9", "distanceMeters": 400, "minutes": 5 },
+  { "fromStopId": "stop-10", "toStopId": "stop-11", "distanceMeters": 900, "minutes": 11 },
+  { "fromStopId": "stop-12", "toStopId": "stop-3", "distanceMeters": 1500, "minutes": 18 }
+]

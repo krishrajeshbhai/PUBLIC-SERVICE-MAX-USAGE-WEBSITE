@@ -1,0 +1,42 @@
+[
+  {
+    "id": "line-purple",
+    "name": "Purple Line",
+    "mode": "metro",
+    "color": "purple",
+    "stopIds": ["stop-10", "stop-9", "stop-8", "stop-4", "stop-7", "stop-6", "stop-5"],
+    "hopMinutes": [3, 2, 3, 2, 3, 4],
+    "hopCosts": [10, 10, 10, 10, 10, 10],
+    "noStairs": true
+  },
+  {
+    "id": "line-green",
+    "name": "Green Line",
+    "mode": "metro",
+    "color": "green",
+    "stopIds": ["stop-15", "stop-10", "stop-11", "stop-12", "stop-14", "stop-13"],
+    "hopMinutes": [4, 3, 5, 4, 3],
+    "hopCosts": [10, 10, 10, 10, 10],
+    "noStairs": true
+  },
+  {
+    "id": "line-bus-201",
+    "name": "Bus 201",
+    "mode": "bus",
+    "color": "blue",
+    "stopIds": ["stop-1", "stop-3", "stop-4", "stop-2", "stop-5"],
+    "hopMinutes": [6, 8, 7, 10],
+    "hopCosts": [5, 5, 5, 5],
+    "noStairs": true
+  },
+  {
+    "id": "line-bus-500",
+    "name": "Bus 500",
+    "mode": "bus",
+    "color": "orange",
+    "stopIds": ["stop-14", "stop-12", "stop-1", "stop-2", "stop-15"],
+    "hopMinutes": [8, 12, 9, 14],
+    "hopCosts": [5, 5, 5, 5],
+    "noStairs": false
+  }
+]

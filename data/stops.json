@@ -1,0 +1,17 @@
+[
+  { "id": "stop-1", "name": "Central Station", "lat": 12.9716, "lng": 77.5946, "noStairs": true },
+  { "id": "stop-2", "name": "Tech Park", "lat": 12.9816, "lng": 77.6046, "noStairs": true },
+  { "id": "stop-3", "name": "Residency Road", "lat": 12.9616, "lng": 77.5846, "noStairs": true },
+  { "id": "stop-4", "name": "MG Road", "lat": 12.9736, "lng": 77.6116, "noStairs": true },
+  { "id": "stop-5", "name": "Indiranagar", "lat": 12.9786, "lng": 77.6406, "noStairs": true },
+  { "id": "stop-6", "name": "Halasuru", "lat": 12.9756, "lng": 77.6256, "noStairs": true },
+  { "id": "stop-7", "name": "Trinity", "lat": 12.9730, "lng": 77.6170, "noStairs": true },
+  { "id": "stop-8", "name": "Cubbon Park", "lat": 12.9790, "lng": 77.5980, "noStairs": true },
+  { "id": "stop-9", "name": "Vidhana Soudha", "lat": 12.9796, "lng": 77.5906, "noStairs": false },
+  { "id": "stop-10", "name": "Majestic", "lat": 12.9766, "lng": 77.5726, "noStairs": true },
+  { "id": "stop-11", "name": "City Market", "lat": 12.9606, "lng": 77.5736, "noStairs": true },
+  { "id": "stop-12", "name": "Jayanagar", "lat": 12.9296, "lng": 77.5806, "noStairs": true },
+  { "id": "stop-13", "name": "JP Nagar", "lat": 12.9100, "lng": 77.5850, "noStairs": true },
+  { "id": "stop-14", "name": "Banashankari", "lat": 12.9150, "lng": 77.5730, "noStairs": true },
+  { "id": "stop-15", "name": "Malleshwaram", "lat": 12.9900, "lng": 77.5700, "noStairs": true }
+]
