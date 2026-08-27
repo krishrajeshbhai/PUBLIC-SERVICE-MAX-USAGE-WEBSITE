@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Navigation, ArrowRight, Accessibility, Zap, Sparkles, AlertCircle } from 'lucide-react';
+import { MapPin, Navigation, Accessibility, Zap, Sparkles, AlertCircle, CheckCircle, Home, Briefcase, ArrowRight } from 'lucide-react';
 import { api } from '../services/api';
 import MapComponent from '../components/MapComponent';
+import { t, getLanguage, subscribeLanguage } from '../i18n/i18n';
 
 export default function SearchPage({ mockApiChanged }) {
   const navigate = useNavigate();
@@ -11,7 +12,14 @@ export default function SearchPage({ mockApiChanged }) {
   const [destinationStopId, setDestinationStopId] = useState('');
   const [accessible, setAccessible] = useState(false);
   const [loadingStops, setLoadingStops] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchStep, setSearchStep] = useState(0);
   const [error, setError] = useState(null);
+  const [, setLangState] = useState(getLanguage());
+
+  useEffect(() => {
+    return subscribeLanguage(setLangState);
+  }, []);
 
   useEffect(() => {
     async function loadStops() {
@@ -35,13 +43,22 @@ export default function SearchPage({ mockApiChanged }) {
   }, [mockApiChanged]);
 
   const handleSearch = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!originStopId || !destinationStopId) return;
     if (originStopId === destinationStopId) {
       setError("Origin and Destination cannot be the same stop.");
       return;
     }
-    navigate(`/results?origin=${originStopId}&destination=${destinationStopId}&accessible=${accessible}`);
+
+    setIsSearching(true);
+    setSearchStep(1);
+
+    setTimeout(() => setSearchStep(2), 300);
+    setTimeout(() => setSearchStep(3), 600);
+    setTimeout(() => setSearchStep(4), 900);
+    setTimeout(() => {
+      navigate(`/results?origin=${originStopId}&destination=${destinationStopId}&accessible=${accessible}`);
+    }, 1200);
   };
 
   const applyPreset = (orig, dest) => {
@@ -50,42 +67,87 @@ export default function SearchPage({ mockApiChanged }) {
     setError(null);
   };
 
-  const quickPresets = [
-    { label: 'Central Station ➔ Tech Park', orig: 'stop-1', dest: 'stop-2', tag: 'Fastest Multi-modal' },
-    { label: 'Majestic ➔ Indiranagar', orig: 'stop-10', dest: 'stop-5', tag: 'Purple Line Metro' },
-    { label: 'Banashankari ➔ Malleshwaram', orig: 'stop-14', dest: 'stop-15', tag: 'Bus & Green Line' }
+  const startDailyCommute = () => {
+    setOriginStopId('stop-1'); // Central Station / Home
+    setDestinationStopId('stop-2'); // Tech Park / Office
+    handleSearch();
+  };
+
+  const searchChecklist = [
+    "Checking public transport operators...",
+    "Comparing metro and bus fares...",
+    "Checking transfer times & footpaths...",
+    "Optimizing fastest & cheapest multi-modal routes..."
   ];
 
   return (
     <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 24px 60px 24px' }}>
-      {/* Hero Section */}
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+      {/* Hero Header */}
+      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
           padding: '6px 16px',
           borderRadius: 'var(--radius-full)',
-          background: 'rgba(59, 130, 246, 0.1)',
+          background: 'rgba(59, 130, 246, 0.12)',
           border: '1px solid rgba(59, 130, 246, 0.3)',
           color: '#60a5fa',
           fontSize: '0.85rem',
           fontWeight: 600,
           marginBottom: '16px'
         }}>
-          <Sparkles size={14} /> Next-Gen Multi-Modal Transit Engine
+          <Sparkles size={14} /> Unified Multi-Modal Transit Engine
         </div>
-        <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', marginBottom: '16px', lineHeight: 1.15 }}>
-          One Search. One Ticket. <span className="gradient-text">One Wallet.</span>
+        <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', marginBottom: '12px', lineHeight: 1.15 }}>
+          {t('searchTitle')}
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '680px', margin: '0 auto' }}>
-          Combine Metro, Bus & Walking in one unified itinerary. Automatically re-plans your trip the second a delay occurs.
+        <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', maxWidth: '680px', margin: '0 auto' }}>
+          {t('searchSubtitle')}
         </p>
+      </div>
+
+      {/* 1-Click Daily Commute Card */}
+      <div
+        className="glass-panel"
+        style={{
+          maxWidth: '840px',
+          margin: '0 auto 32px auto',
+          padding: '18px 24px',
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)',
+          border: '1px solid rgba(59, 130, 246, 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ background: '#3b82f6', padding: '10px', borderRadius: '12px', display: 'flex' }}>
+            <Home size={22} color="#fff" />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase' }}>
+              {t('quickCommute')}
+            </div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>
+              {t('homeToOffice')}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+              <span className="live-indicator"></span> Metro Purple Line running on time
+            </div>
+          </div>
+        </div>
+
+        <button onClick={startDailyCommute} className="btn-primary" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
+          Start Commute <ArrowRight size={16} />
+        </button>
       </div>
 
       {error && (
         <div style={{
-          maxWidth: '800px',
+          maxWidth: '840px',
           margin: '0 auto 24px auto',
           padding: '14px 20px',
           background: 'rgba(239, 68, 68, 0.12)',
@@ -101,6 +163,39 @@ export default function SearchPage({ mockApiChanged }) {
         </div>
       )}
 
+      {/* Searching Progress Checklist Modal */}
+      {isSearching && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(9, 13, 22, 0.85)',
+          backdropFilter: 'blur(12px)',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div className="glass-panel" style={{ padding: '36px', width: '90%', maxWidth: '480px', textAlign: 'center' }}>
+            <Zap size={36} color="#60a5fa" className="pulse-alert" style={{ marginBottom: '16px' }} />
+            <h3 style={{ fontSize: '1.3rem', marginBottom: '20px' }}>Finding the Best Routes...</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
+              {searchChecklist.map((stepText, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.92rem' }}>
+                  {searchStep > idx ? (
+                    <CheckCircle size={18} color="#10b981" />
+                  ) : (
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid var(--text-dim)' }} />
+                  )}
+                  <span style={{ color: searchStep > idx ? '#ffffff' : 'var(--text-muted)' }}>
+                    {stepText}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Grid: Form + Interactive Map */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '32px', alignItems: 'start' }}>
         {/* Search Panel Card */}
@@ -113,7 +208,7 @@ export default function SearchPage({ mockApiChanged }) {
             {/* Origin Picker */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                ORIGIN STOP
+                {t('fromLabel').toUpperCase()}
               </label>
               <div style={{ position: 'relative' }}>
                 <select
@@ -144,7 +239,7 @@ export default function SearchPage({ mockApiChanged }) {
             {/* Destination Picker */}
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                DESTINATION STOP
+                {t('toLabel').toUpperCase()}
               </label>
               <div style={{ position: 'relative' }}>
                 <select
@@ -207,7 +302,7 @@ export default function SearchPage({ mockApiChanged }) {
               style={{ width: '100%', padding: '14px' }}
               disabled={loadingStops || !originStopId || !destinationStopId}
             >
-              <Zap size={18} /> Search Ranked Journeys
+              <Zap size={18} /> {t('findRoutes')}
             </button>
           </form>
 
@@ -217,19 +312,14 @@ export default function SearchPage({ mockApiChanged }) {
               ⚡ Quick Demo Routes
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {quickPresets.map((preset, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => applyPreset(preset.orig, preset.dest)}
-                  className="btn-secondary"
-                  style={{ justifyContent: 'space-between', textAlign: 'left', width: '100%' }}
-                >
-                  <span style={{ fontSize: '0.85rem' }}>{preset.label}</span>
-                  <span className="badge" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', textTransform: 'none' }}>
-                    {preset.tag}
-                  </span>
-                </button>
-              ))}
+              <button onClick={() => applyPreset('stop-1', 'stop-2')} className="btn-secondary" style={{ justifyContent: 'space-between', width: '100%' }}>
+                <span style={{ fontSize: '0.85rem' }}>Central Station ➔ Tech Park</span>
+                <span className="badge badge-fastest">Fastest Multi-modal</span>
+              </button>
+              <button onClick={() => applyPreset('stop-10', 'stop-5')} className="btn-secondary" style={{ justifyContent: 'space-between', width: '100%' }}>
+                <span style={{ fontSize: '0.85rem' }}>Majestic ➔ Indiranagar</span>
+                <span className="badge" style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#c084fc' }}>Metro Purple Line</span>
+              </button>
             </div>
           </div>
         </div>

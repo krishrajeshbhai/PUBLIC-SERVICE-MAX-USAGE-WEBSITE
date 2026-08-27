@@ -1,0 +1,493 @@
+{
+  "stops": [
+    {
+      "id": "stop-1",
+      "name": "Central Station",
+      "lat": 12.9716,
+      "lng": 77.5946,
+      "noStairs": true
+    },
+    {
+      "id": "stop-2",
+      "name": "Tech Park",
+      "lat": 12.9816,
+      "lng": 77.6046,
+      "noStairs": true
+    },
+    {
+      "id": "stop-3",
+      "name": "Residency Road",
+      "lat": 12.9616,
+      "lng": 77.5846,
+      "noStairs": true
+    },
+    {
+      "id": "stop-4",
+      "name": "MG Road",
+      "lat": 12.9736,
+      "lng": 77.6116,
+      "noStairs": true
+    },
+    {
+      "id": "stop-5",
+      "name": "Indiranagar",
+      "lat": 12.9786,
+      "lng": 77.6406,
+      "noStairs": true
+    },
+    {
+      "id": "stop-6",
+      "name": "Halasuru",
+      "lat": 12.9756,
+      "lng": 77.6256,
+      "noStairs": true
+    },
+    {
+      "id": "stop-7",
+      "name": "Trinity",
+      "lat": 12.973,
+      "lng": 77.617,
+      "noStairs": true
+    },
+    {
+      "id": "stop-8",
+      "name": "Cubbon Park",
+      "lat": 12.979,
+      "lng": 77.598,
+      "noStairs": true
+    },
+    {
+      "id": "stop-9",
+      "name": "Vidhana Soudha",
+      "lat": 12.9796,
+      "lng": 77.5906,
+      "noStairs": false
+    },
+    {
+      "id": "stop-10",
+      "name": "Majestic",
+      "lat": 12.9766,
+      "lng": 77.5726,
+      "noStairs": true
+    },
+    {
+      "id": "stop-11",
+      "name": "City Market",
+      "lat": 12.9606,
+      "lng": 77.5736,
+      "noStairs": true
+    },
+    {
+      "id": "stop-12",
+      "name": "Jayanagar",
+      "lat": 12.9296,
+      "lng": 77.5806,
+      "noStairs": true
+    },
+    {
+      "id": "stop-13",
+      "name": "JP Nagar",
+      "lat": 12.91,
+      "lng": 77.585,
+      "noStairs": true
+    },
+    {
+      "id": "stop-14",
+      "name": "Banashankari",
+      "lat": 12.915,
+      "lng": 77.573,
+      "noStairs": true
+    },
+    {
+      "id": "stop-15",
+      "name": "Malleshwaram",
+      "lat": 12.99,
+      "lng": 77.57,
+      "noStairs": true
+    }
+  ],
+  "lines": [
+    {
+      "id": "line-purple",
+      "name": "Purple Line",
+      "mode": "metro",
+      "color": "purple",
+      "stopIds": [
+        "stop-10",
+        "stop-9",
+        "stop-8",
+        "stop-4",
+        "stop-7",
+        "stop-6",
+        "stop-5"
+      ],
+      "hopMinutes": [
+        3,
+        2,
+        3,
+        2,
+        3,
+        4
+      ],
+      "hopCosts": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "noStairs": true
+    },
+    {
+      "id": "line-green",
+      "name": "Green Line",
+      "mode": "metro",
+      "color": "green",
+      "stopIds": [
+        "stop-15",
+        "stop-10",
+        "stop-11",
+        "stop-12",
+        "stop-14",
+        "stop-13"
+      ],
+      "hopMinutes": [
+        4,
+        3,
+        5,
+        4,
+        3
+      ],
+      "hopCosts": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "noStairs": true
+    },
+    {
+      "id": "line-bus-201",
+      "name": "Bus 201",
+      "mode": "bus",
+      "color": "blue",
+      "stopIds": [
+        "stop-1",
+        "stop-3",
+        "stop-4",
+        "stop-2",
+        "stop-5"
+      ],
+      "hopMinutes": [
+        6,
+        8,
+        7,
+        10
+      ],
+      "hopCosts": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "noStairs": true
+    },
+    {
+      "id": "line-bus-500",
+      "name": "Bus 500",
+      "mode": "bus",
+      "color": "orange",
+      "stopIds": [
+        "stop-14",
+        "stop-12",
+        "stop-1",
+        "stop-2",
+        "stop-15"
+      ],
+      "hopMinutes": [
+        8,
+        12,
+        9,
+        14
+      ],
+      "hopCosts": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "noStairs": false
+    }
+  ],
+  "walkEdges": [
+    {
+      "fromStopId": "stop-1",
+      "toStopId": "stop-10",
+      "distanceMeters": 800,
+      "minutes": 10
+    },
+    {
+      "fromStopId": "stop-1",
+      "toStopId": "stop-3",
+      "distanceMeters": 600,
+      "minutes": 7
+    },
+    {
+      "fromStopId": "stop-2",
+      "toStopId": "stop-4",
+      "distanceMeters": 500,
+      "minutes": 6
+    },
+    {
+      "fromStopId": "stop-8",
+      "toStopId": "stop-9",
+      "distanceMeters": 400,
+      "minutes": 5
+    },
+    {
+      "fromStopId": "stop-10",
+      "toStopId": "stop-11",
+      "distanceMeters": 900,
+      "minutes": 11
+    },
+    {
+      "fromStopId": "stop-12",
+      "toStopId": "stop-3",
+      "distanceMeters": 1500,
+      "minutes": 18
+    }
+  ],
+  "wallets": [
+    {
+      "userId": "user-1",
+      "balance": 415
+    }
+  ],
+  "tickets": [
+    {
+      "id": "tkt-1787826640331-260",
+      "journeyOptionId": "jo-fastest-stop-10-stop-5-1787826640327-26",
+      "userId": "user-1",
+      "status": "rerouted",
+      "createdAt": "2026-08-27T10:30:40.331Z",
+      "journeyOption": {
+        "id": "jo-fastest-stop-10-stop-5-1787826640330-718",
+        "type": "fastest",
+        "totalMinutes": 17,
+        "totalCost": 60,
+        "totalWalkMeters": 0,
+        "co2SavedGrams": 1530,
+        "segments": [
+          {
+            "mode": "metro",
+            "lineId": "line-purple",
+            "fromStopId": "stop-10",
+            "toStopId": "stop-5",
+            "minutes": 17,
+            "cost": 60,
+            "crowdLevel": "red"
+          }
+        ]
+      },
+      "reroutedJourneyOption": {
+        "id": "jo-fastest-stop-10-stop-5-1787826640342-653",
+        "type": "fastest",
+        "totalMinutes": 29,
+        "totalCost": 10,
+        "totalWalkMeters": 800,
+        "co2SavedGrams": 1008,
+        "segments": [
+          {
+            "mode": "walk",
+            "fromStopId": "stop-10",
+            "toStopId": "stop-1",
+            "minutes": 10,
+            "cost": 0,
+            "crowdLevel": "green"
+          },
+          {
+            "mode": "bus",
+            "lineId": "line-bus-500",
+            "fromStopId": "stop-1",
+            "toStopId": "stop-2",
+            "minutes": 9,
+            "cost": 5,
+            "crowdLevel": "yellow"
+          },
+          {
+            "mode": "bus",
+            "lineId": "line-bus-201",
+            "fromStopId": "stop-2",
+            "toStopId": "stop-5",
+            "minutes": 10,
+            "cost": 5,
+            "crowdLevel": "green"
+          }
+        ]
+      },
+      "alert": "Delay on Purple Line near Vidhana Soudha. Rerouted to destination via fastest path."
+    },
+    {
+      "id": "tkt-1787833015380-654",
+      "journeyOptionId": "jo-fastest-stop-1-stop-2-1787833003631-562",
+      "userId": "user-1",
+      "status": "active",
+      "createdAt": "2026-08-27T12:16:55.380Z",
+      "journeyOption": {
+        "id": "jo-fastest-stop-1-stop-2-1787833015378-301",
+        "type": "fastest",
+        "totalMinutes": 9,
+        "totalCost": 5,
+        "totalWalkMeters": 0,
+        "co2SavedGrams": 432,
+        "segments": [
+          {
+            "mode": "bus",
+            "lineId": "line-bus-500",
+            "fromStopId": "stop-1",
+            "toStopId": "stop-2",
+            "minutes": 9,
+            "cost": 5,
+            "crowdLevel": "yellow"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tkt-1787833033819-607",
+      "journeyOptionId": "jo-fastest-stop-1-stop-2-1787833029436-726",
+      "userId": "user-1",
+      "status": "active",
+      "createdAt": "2026-08-27T12:17:13.819Z",
+      "journeyOption": {
+        "id": "jo-fastest-stop-1-stop-2-1787833033817-780",
+        "type": "fastest",
+        "totalMinutes": 9,
+        "totalCost": 5,
+        "totalWalkMeters": 0,
+        "co2SavedGrams": 432,
+        "segments": [
+          {
+            "mode": "bus",
+            "lineId": "line-bus-500",
+            "fromStopId": "stop-1",
+            "toStopId": "stop-2",
+            "minutes": 9,
+            "cost": 5,
+            "crowdLevel": "yellow"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tkt-1787833052738-578",
+      "journeyOptionId": "jo-accessible-stop-1-stop-2-1787833046303-341",
+      "userId": "user-1",
+      "status": "active",
+      "createdAt": "2026-08-27T12:17:32.738Z",
+      "journeyOption": {
+        "id": "jo-accessible-stop-1-stop-2-1787833052737-88",
+        "type": "accessible",
+        "totalMinutes": 20,
+        "totalCost": 10,
+        "totalWalkMeters": 500,
+        "co2SavedGrams": 732,
+        "segments": [
+          {
+            "mode": "bus",
+            "lineId": "line-bus-201",
+            "fromStopId": "stop-1",
+            "toStopId": "stop-4",
+            "minutes": 14,
+            "cost": 10,
+            "crowdLevel": "green"
+          },
+          {
+            "mode": "walk",
+            "fromStopId": "stop-4",
+            "toStopId": "stop-2",
+            "minutes": 6,
+            "cost": 0,
+            "crowdLevel": "green"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tkt-1787833151891-611",
+      "journeyOptionId": "jo-fastest-stop-1-stop-2-1787833150311-84",
+      "userId": "user-1",
+      "status": "active",
+      "createdAt": "2026-08-27T12:19:11.891Z",
+      "journeyOption": {
+        "id": "jo-fastest-stop-1-stop-2-1787833151889-195",
+        "type": "fastest",
+        "totalMinutes": 9,
+        "totalCost": 5,
+        "totalWalkMeters": 0,
+        "co2SavedGrams": 432,
+        "segments": [
+          {
+            "mode": "bus",
+            "lineId": "line-bus-500",
+            "fromStopId": "stop-1",
+            "toStopId": "stop-2",
+            "minutes": 9,
+            "cost": 5,
+            "crowdLevel": "yellow"
+          }
+        ]
+      }
+    }
+  ],
+  "walletTxns": [
+    {
+      "id": "txn-1787826640332",
+      "userId": "user-1",
+      "amount": -60,
+      "ticketId": "tkt-1787826640331-260",
+      "timestamp": "2026-08-27T10:30:40.332Z"
+    },
+    {
+      "id": "txn-1787833015381",
+      "userId": "user-1",
+      "amount": -5,
+      "ticketId": "tkt-1787833015380-654",
+      "timestamp": "2026-08-27T12:16:55.381Z"
+    },
+    {
+      "id": "txn-1787833033820",
+      "userId": "user-1",
+      "amount": -5,
+      "ticketId": "tkt-1787833033819-607",
+      "timestamp": "2026-08-27T12:17:13.820Z"
+    },
+    {
+      "id": "txn-1787833052739",
+      "userId": "user-1",
+      "amount": -10,
+      "ticketId": "tkt-1787833052738-578",
+      "timestamp": "2026-08-27T12:17:32.739Z"
+    },
+    {
+      "id": "txn-1787833151892",
+      "userId": "user-1",
+      "amount": -5,
+      "ticketId": "tkt-1787833151891-611",
+      "timestamp": "2026-08-27T12:19:11.892Z"
+    }
+  ],
+  "delayEvents": [
+    {
+      "id": "delay-1787826640340",
+      "segmentKey": "line-purple+stop-10+stop-9",
+      "lineId": "line-purple",
+      "fromStopId": "stop-10",
+      "toStopId": "stop-9",
+      "delayMinutes": 15,
+      "createdAt": "2026-08-27T10:30:40.340Z"
+    }
+  ]
+}
