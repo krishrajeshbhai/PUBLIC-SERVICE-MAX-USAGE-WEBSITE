@@ -1,19 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Globe, CheckCircle2, ChevronRight, ChevronLeft, Sparkles, Heart, Accessibility, Zap, DollarSign, Leaf, Footprints } from 'lucide-react';
 import { api } from '../../services/api';
 import { setAuthUser } from '../../store/authStore';
 import { LANGUAGES, setLanguage } from '../../i18n/i18n';
+import { updateUXProfile, initThemeFromUrlOrUser } from '../../store/uxProfileStore';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    initThemeFromUrlOrUser(null);
+  }, []);
+
   // Form State across 5 steps
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
+    age: '',
     country: 'India',
     language: 'en',
     preferences: {
@@ -24,6 +33,8 @@ export default function RegisterPage() {
     },
     accessibility: false
   });
+
+  const isSenior = parseInt(formData.age, 10) > 50;
 
   const countries = [
     { code: 'IN', name: 'India' },
@@ -36,21 +47,33 @@ export default function RegisterPage() {
 
   const handleRegisterComplete = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Sync selected language to i18n
       setLanguage(formData.language);
 
-      const res = await api.register(formData);
+      if (isSenior) {
+        updateUXProfile({
+          mode: 'simplified',
+          fontSize: 'large',
+          highContrast: true
+        });
+      }
+
+      const res = await api.register({
+        ...formData,
+        accessibility: isSenior ? true : formData.accessibility
+      });
+      
       setAuthUser(res.user);
 
-      // Determine initial experience shell: foreign users -> Visitor mode, domestic -> Passenger
       if (res.user.role === 'visitor') {
         navigate('/visitor');
       } else {
-        navigate('/');
+        navigate('/search');
       }
     } catch (err) {
       console.error("Registration error:", err);
+      setError(err.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -66,7 +89,7 @@ export default function RegisterPage() {
               STEP {step} OF 5
             </span>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              {step === 1 ? 'Personal Info' : step === 2 ? 'Country / Region' : step === 3 ? 'Language' : step === 4 ? 'Preferences' : 'Complete'}
+              {step === 1 ? 'Personal Info & Age' : step === 2 ? 'Country / Region' : step === 3 ? 'Language' : step === 4 ? 'Preferences' : 'Complete'}
             </span>
           </div>
           <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '9999px', overflow: 'hidden' }}>
@@ -74,11 +97,17 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* STEP 1: Name & Contact */}
+        {error && (
+          <div style={{ padding: '12px 16px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', borderRadius: 'var(--radius-sm)', color: '#fca5a5', fontSize: '0.88rem', marginBottom: '20px' }}>
+            {error}
+          </div>
+        )}
+
+        {/* STEP 1: Name, Contact & Age */}
         {step === 1 && (
           <div>
             <h2 style={{ fontSize: '1.4rem', marginBottom: '6px' }}>Create Your Account</h2>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '20px' }}>Let's get started with basic details</p>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '20px' }}>Basic details & age for automatic UX adaptation</p>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>YOUR NAME</label>
@@ -87,26 +116,61 @@ export default function RegisterPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Rahul Sharma"
+                required
                 style={{ width: '100%', padding: '12px 16px', background: 'var(--bg-input)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', color: '#fff', outline: 'none' }}
               />
             </div>
 
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>MOBILE / EMAIL</label>
               <input
                 type="text"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="rahul@example.com or +91..."
+                required
                 style={{ width: '100%', padding: '12px 16px', background: 'var(--bg-input)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', color: '#fff', outline: 'none' }}
               />
             </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>CREATE PASSWORD</label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="•••••••• (Min 6 chars)"
+                required
+                style={{ width: '100%', padding: '12px 16px', background: 'var(--bg-input)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', color: '#fff', outline: 'none' }}
+              />
+            </div>
+
+            {/* AGE INPUT */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>YOUR AGE</label>
+              <input
+                type="number"
+                value={formData.age}
+                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                placeholder="e.g. 54"
+                min="1"
+                max="120"
+                style={{ width: '100%', padding: '12px 16px', background: 'var(--bg-input)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', color: '#fff', outline: 'none' }}
+              />
+            </div>
+
+            {isSenior && (
+              <div style={{ padding: '12px 16px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid #f59e0b', borderRadius: 'var(--radius-sm)', marginBottom: '24px', color: '#fef08a', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Heart size={20} color="#f59e0b" />
+                <span>👵 <strong>Senior Citizen Mode Detected (Age &gt; 50).</strong> 50% Concession & Step-Free routing will be auto-enabled!</span>
+              </div>
+            )}
 
             <button
               onClick={() => setStep(2)}
               className="btn-primary"
               style={{ width: '100%', padding: '14px' }}
-              disabled={!formData.name.trim()}
+              disabled={!formData.name.trim() || !formData.email.trim() || !formData.password.trim()}
             >
               Continue to Step 2 <ChevronRight size={18} />
             </button>
@@ -210,7 +274,8 @@ export default function RegisterPage() {
                 <label className="toggle-switch">
                   <input
                     type="checkbox"
-                    checked={formData.accessibility}
+                    checked={isSenior ? true : formData.accessibility}
+                    disabled={isSenior}
                     onChange={(e) => setFormData({ ...formData, accessibility: e.target.checked })}
                   />
                   <span className="slider"></span>
@@ -268,9 +333,15 @@ export default function RegisterPage() {
               <CheckCircle2 size={32} color="#34d399" />
             </div>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Setup Complete!</h2>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '24px' }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
               Your profile is configured as <strong>{formData.country !== 'India' ? 'Foreign Tourist (Visitor Mode)' : 'Domestic Commuter'}</strong>.
             </p>
+
+            {isSenior && (
+              <div style={{ padding: '12px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid #f59e0b', borderRadius: 'var(--radius-sm)', marginBottom: '24px', color: '#fef08a', fontSize: '0.85rem' }}>
+                👵 Senior Citizen Benefits Activated: 50% Concession on Metro & Bus + Large Text
+              </div>
+            )}
 
             <button
               onClick={handleRegisterComplete}

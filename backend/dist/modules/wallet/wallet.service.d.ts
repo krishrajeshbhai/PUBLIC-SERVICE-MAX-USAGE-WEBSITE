@@ -4,10 +4,10 @@ export declare class WalletService {
     constructor(prisma: PrismaService);
     getWallet(userId: string): Promise<{
         transactions: {
+            type: string;
             id: string;
             createdAt: Date;
             operatorId: string | null;
-            type: string;
             userId: string;
             currency: string;
             walletId: string;

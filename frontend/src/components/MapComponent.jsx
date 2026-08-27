@@ -101,7 +101,7 @@ export default function MapComponent({ stops = [], journeyOption = null, isRerou
         {activeCoords.length > 0 && <ChangeMapView coords={activeCoords} />}
 
         {/* Render all stop markers */}
-        {stops.map((stop) => {
+        {stops.filter(stop => stop && typeof stop.lat === 'number' && typeof stop.lng === 'number').map((stop) => {
           const isOrigin = stop.id === originStopId;
           const isDest = stop.id === destStopId;
           const isSelected = activeCoords.some(c => c[0] === stop.lat && c[1] === stop.lng);

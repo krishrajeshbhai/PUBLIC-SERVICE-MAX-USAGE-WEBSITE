@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, Activity, Send, CheckCircle2, Bus, Train, Radio, RefreshCw, BarChart2 } from 'lucide-react';
+import { Shield, AlertTriangle, Activity, Send, CheckCircle2, Bus, Train, Radio, RefreshCw, BarChart2, LogOut } from 'lucide-react';
 import { api } from '../../services/api';
 import { t } from '../../i18n/i18n';
+import { logoutUser } from '../../store/authStore';
 
 export default function EmployeeDashboardPage() {
   const navigate = useNavigate();
@@ -46,6 +47,11 @@ export default function EmployeeDashboardPage() {
     }
   };
 
+  const handleStaffLogout = () => {
+    logoutUser();
+    navigate('/employee-login');
+  };
+
   if (!opsData) {
     return (
       <div style={{ maxWidth: '1280px', margin: '60px auto', textAlign: 'center' }}>
@@ -71,6 +77,9 @@ export default function EmployeeDashboardPage() {
           </button>
           <button onClick={fetchOps} className="btn-secondary">
             <RefreshCw size={16} /> Refresh Network
+          </button>
+          <button onClick={handleStaffLogout} className="btn-warning" style={{ padding: '8px 16px' }}>
+            <LogOut size={16} /> Log Out Staff
           </button>
         </div>
       </div>

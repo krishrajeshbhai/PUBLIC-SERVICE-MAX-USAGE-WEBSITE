@@ -96,28 +96,79 @@ const VISITOR_ATTRACTIONS = [
   }
 ];
 
-let state = {
-  wallets: { "user-1": 500 },
-  tickets: {},
-  walletTxns: [
-    { id: 'txn-101', userId: 'user-1', amount: -28, ticketId: 'tkt-prev-1', timestamp: new Date(Date.now() - 86400000).toISOString(), title: 'Office → Home Commute' },
-    { id: 'txn-102', userId: 'user-1', amount: 200, ticketId: null, timestamp: new Date(Date.now() - 172800000).toISOString(), title: 'UPI Top-Up' }
-  ],
-  delays: [],
-  incidents: [
-    { id: "INC-8291", title: "Signal Failure on Purple Line", severity: "Medium", status: "INVESTIGATING", affectedPassengers: 1824, line: "Purple Line", startedAt: "14:42" },
-    { id: "INC-8292", title: "Heavy Road Congestion MG Road", severity: "Low", status: "MONITORING", affectedPassengers: 620, line: "Bus 201", startedAt: "16:15" }
-  ],
-  alerts: [
-    { id: "ALT-1", line: "Purple Line", severity: "Warning", message: "10-minute delay due to track maintenance work near Cubbon Park.", timestamp: "10 mins ago" }
-  ],
-  vehicles: [
-    { id: "BUS-421", line: "Bus 201", driver: "R. Sharma", status: "active", speed: "34 km/h", locationName: "Residency Road" },
-    { id: "BUS-422", line: "Bus 201", driver: "K. Patel", status: "delayed", speed: "12 km/h", locationName: "MG Road Junction" },
-    { id: "MTR-108", line: "Purple Line", driver: "Auto-Control", status: "active", speed: "58 km/h", locationName: "Trinity Station" },
-    { id: "MTR-204", line: "Green Line", driver: "Auto-Control", status: "active", speed: "62 km/h", locationName: "Jayanagar" }
-  ]
+const DB_KEYS = {
+  WALLETS: 'transitone_wallets_v3',
+  TICKETS: 'transitone_tickets_v3',
+  TXNS: 'transitone_txns_v3',
+  DELAYS: 'transitone_delays_v3'
 };
+
+function loadStateFromStorage() {
+  try {
+    const rawWallets = localStorage.getItem(DB_KEYS.WALLETS);
+    const rawTickets = localStorage.getItem(DB_KEYS.TICKETS);
+    const rawTxns = localStorage.getItem(DB_KEYS.TXNS);
+    const rawDelays = localStorage.getItem(DB_KEYS.DELAYS);
+
+    return {
+      wallets: rawWallets ? JSON.parse(rawWallets) : { "user-1": 500, "user-passenger": 500 },
+      tickets: rawTickets ? JSON.parse(rawTickets) : {},
+      walletTxns: rawTxns ? JSON.parse(rawTxns) : [
+        { id: 'txn-101', userId: 'user-1', amount: -28, ticketId: 'tkt-prev-1', timestamp: new Date(Date.now() - 86400000).toISOString(), title: 'Office → Home Commute' },
+        { id: 'txn-102', userId: 'user-1', amount: 200, ticketId: null, timestamp: new Date(Date.now() - 172800000).toISOString(), title: 'UPI Top-Up' }
+      ],
+      delays: rawDelays ? JSON.parse(rawDelays) : [],
+      incidents: [
+        { id: "INC-8291", title: "Signal Failure on Purple Line", severity: "Medium", status: "INVESTIGATING", affectedPassengers: 1824, line: "Purple Line", startedAt: "14:42" },
+        { id: "INC-8292", title: "Heavy Road Congestion MG Road", severity: "Low", status: "MONITORING", affectedPassengers: 620, line: "Bus 201", startedAt: "16:15" }
+      ],
+      alerts: [
+        { id: "ALT-1", line: "Purple Line", severity: "Warning", message: "10-minute delay due to track maintenance work near Cubbon Park.", timestamp: "10 mins ago" }
+      ],
+      vehicles: [
+        { id: "BUS-421", line: "Bus 201", driver: "R. Sharma", status: "active", speed: "34 km/h", locationName: "Residency Road" },
+        { id: "BUS-422", line: "Bus 201", driver: "K. Patel", status: "delayed", speed: "12 km/h", locationName: "MG Road Junction" },
+        { id: "MTR-108", line: "Purple Line", driver: "Auto-Control", status: "active", speed: "58 km/h", locationName: "Trinity Station" },
+        { id: "MTR-204", line: "Green Line", driver: "Auto-Control", status: "active", speed: "62 km/h", locationName: "Jayanagar" }
+      ]
+    };
+  } catch (e) {
+    return {
+      wallets: { "user-1": 500, "user-passenger": 500 },
+      tickets: {},
+      walletTxns: [],
+      delays: [],
+      incidents: [],
+      alerts: [],
+      vehicles: []
+    };
+  }
+}
+
+let state = loadStateFromStorage();
+
+function saveStateToStorage() {
+  try {
+    localStorage.setItem(DB_KEYS.WALLETS, JSON.stringify(state.wallets));
+    localStorage.setItem(DB_KEYS.TICKETS, JSON.stringify(state.tickets));
+    localStorage.setItem(DB_KEYS.TXNS, JSON.stringify(state.walletTxns));
+    localStorage.setItem(DB_KEYS.DELAYS, JSON.stringify(state.delays));
+  } catch (e) {
+    console.warn("Storage save error:", e);
+  }
+}
+
+function getDistanceMeters(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return 5000;
+  const R = 6371e3;
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
 
 export const mockApi = {
   async getStops() {
@@ -127,58 +178,85 @@ export const mockApi = {
 
   async searchJourneys(originStopId, destinationStopId, prefs = {}) {
     await new Promise(r => setTimeout(r, 150));
+    const origin = STOPS.find(s => s.id === originStopId) || STOPS[0];
+    const destination = STOPS.find(s => s.id === destinationStopId) || STOPS[1];
+
+    const distMeters = getDistanceMeters(origin.lat, origin.lng, destination.lat, destination.lng);
+    const distKm = Math.max(1, distMeters / 1000);
+
     const busDelay = state.delays.find(d => d.lineId === 'line-bus-201');
+
+    // Dynamic Fare & Time Calculations based on segment sum (Walk = ₹0)
+    const fastestMins = Math.round(12 + distKm * 2.8) + (busDelay ? busDelay.delayMinutes : 0);
+    const cheapestMins = Math.round(18 + distKm * 3.5);
+    const leastWalkingMins = Math.round(15 + distKm * 2.5);
+
+    const busFare = Math.round(12 + distKm * 2.0);
+    const metroFare = Math.round(16 + distKm * 2.5);
 
     const options = [
       {
         id: `jo-fastest-${originStopId}-${destinationStopId}-${Date.now()}`,
         type: "fastest",
-        totalMinutes: busDelay ? 36 + busDelay.delayMinutes : 24,
-        totalCost: 20,
-        totalWalkMeters: 450,
-        co2SavedGrams: 420,
+        totalMinutes: fastestMins,
+        totalCost: busFare + metroFare, // Walk (₹0) + Bus + Metro
+        totalWalkMeters: Math.round(300 + distKm * 30),
+        co2SavedGrams: Math.round(distKm * 85),
         segments: [
           { mode: "walk", fromStopId: originStopId, toStopId: "stop-1", minutes: 5, cost: 0, crowdLevel: "green" },
-          { mode: "bus", lineId: "line-bus-201", fromStopId: "stop-1", toStopId: "stop-4", minutes: busDelay ? 14 + busDelay.delayMinutes : 14, cost: 10, crowdLevel: "yellow" },
-          { mode: "metro", lineId: "line-purple", fromStopId: "stop-4", toStopId: destinationStopId, minutes: 5, cost: 10, crowdLevel: "green" }
+          { mode: "bus", lineId: "line-bus-201", fromStopId: "stop-1", toStopId: "stop-4", minutes: Math.round(fastestMins * 0.6), cost: busFare, crowdLevel: "yellow" },
+          { mode: "metro", lineId: "line-purple", fromStopId: "stop-4", toStopId: destinationStopId, minutes: Math.round(fastestMins * 0.4), cost: metroFare, crowdLevel: "green" }
         ]
       },
       {
         id: `jo-cheapest-${originStopId}-${destinationStopId}-${Date.now()}`,
         type: "cheapest",
-        totalMinutes: 32,
-        totalCost: 10,
-        totalWalkMeters: 800,
-        co2SavedGrams: 350,
+        totalMinutes: cheapestMins,
+        totalCost: busFare,
+        totalWalkMeters: Math.round(600 + distKm * 50),
+        co2SavedGrams: Math.round(distKm * 70),
         segments: [
           { mode: "walk", fromStopId: originStopId, toStopId: "stop-3", minutes: 8, cost: 0, crowdLevel: "green" },
-          { mode: "bus", lineId: "line-bus-201", fromStopId: "stop-3", toStopId: destinationStopId, minutes: 24, cost: 10, crowdLevel: "yellow" }
+          { mode: "bus", lineId: "line-bus-201", fromStopId: "stop-3", toStopId: destinationStopId, minutes: cheapestMins - 8, cost: busFare, crowdLevel: "yellow" }
         ]
       },
       {
         id: `jo-least_walking-${originStopId}-${destinationStopId}-${Date.now()}`,
         type: "least_walking",
-        totalMinutes: 28,
-        totalCost: 25,
+        totalMinutes: leastWalkingMins,
+        totalCost: metroFare + metroFare,
         totalWalkMeters: 180,
-        co2SavedGrams: 510,
+        co2SavedGrams: Math.round(distKm * 95),
         segments: [
-          { mode: "metro", lineId: "line-purple", fromStopId: originStopId === "stop-1" ? "stop-10" : originStopId, toStopId: "stop-4", minutes: 8, cost: 15, crowdLevel: "green" },
-          { mode: "metro", lineId: "line-purple", fromStopId: "stop-4", toStopId: destinationStopId, minutes: 20, cost: 10, crowdLevel: "green" }
+          { mode: "metro", lineId: "line-purple", fromStopId: originStopId === "stop-1" ? "stop-10" : originStopId, toStopId: "stop-4", minutes: Math.round(leastWalkingMins * 0.4), cost: metroFare, crowdLevel: "green" },
+          { mode: "metro", lineId: "line-purple", fromStopId: "stop-4", toStopId: destinationStopId, minutes: Math.round(leastWalkingMins * 0.6), cost: metroFare, crowdLevel: "green" }
         ]
       }
     ];
+
+    // Add 100% Free Walking Route option
+    options.push({
+      id: `jo-walk-${originStopId}-${destinationStopId}-${Date.now()}`,
+      type: "walk_only",
+      totalMinutes: Math.round(distKm * 12),
+      totalCost: 0,
+      totalWalkMeters: Math.round(distMeters),
+      co2SavedGrams: Math.round(distKm * 120),
+      segments: [
+        { mode: "walk", fromStopId: originStopId, toStopId: destinationStopId, minutes: Math.round(distKm * 12), cost: 0, crowdLevel: "green" }
+      ]
+    });
 
     if (prefs.accessible) {
       options.push({
         id: `jo-accessible-${originStopId}-${destinationStopId}-${Date.now()}`,
         type: "accessible",
-        totalMinutes: 30,
-        totalCost: 20,
-        totalWalkMeters: 300,
-        co2SavedGrams: 460,
+        totalMinutes: leastWalkingMins + 4,
+        totalCost: busFare,
+        totalWalkMeters: 220,
+        co2SavedGrams: Math.round(distKm * 90),
         segments: [
-          { mode: "bus", lineId: "line-bus-201", fromStopId: originStopId, toStopId: destinationStopId, minutes: 30, cost: 20, crowdLevel: "green" }
+          { mode: "bus", lineId: "line-bus-201", fromStopId: originStopId, toStopId: destinationStopId, minutes: leastWalkingMins + 4, cost: busFare, crowdLevel: "green" }
         ]
       });
     }
@@ -188,36 +266,48 @@ export const mockApi = {
 
   async bookTicket(userId, journeyOptionId, chosenOption = null) {
     await new Promise(r => setTimeout(r, 120));
-    const currentBalance = state.wallets[userId] ?? 500;
-    const cost = chosenOption ? chosenOption.totalCost : 20;
+    const currentBalance = state.wallets[userId] !== undefined ? state.wallets[userId] : 500;
+    
+    // Calculate total cost strictly from chosen option segments (Walk = ₹0)
+    let cost = 0;
+    if (chosenOption) {
+      if (typeof chosenOption.totalCost === 'number') {
+        cost = chosenOption.totalCost;
+      } else {
+        cost = (chosenOption.segments || []).reduce((acc, s) => acc + (s.mode === 'walk' ? 0 : (s.cost || 0)), 0);
+      }
+    }
 
     if (currentBalance < cost) {
-      throw new Error("Insufficient wallet balance. Recharge your wallet to book this ticket.");
+      throw new Error(`Insufficient wallet balance (Available: ₹${currentBalance}). Required ₹${cost}. Please recharge your wallet.`);
     }
 
     const newBalance = currentBalance - cost;
     state.wallets[userId] = newBalance;
 
     const ticketId = `TX-${Math.floor(100000 + Math.random() * 900000)}`;
+    const ticketOption = chosenOption ? { ...chosenOption, totalCost: cost } : {
+      id: journeyOptionId,
+      type: "fastest",
+      totalMinutes: 24,
+      totalCost: cost,
+      totalWalkMeters: 450,
+      co2SavedGrams: 420,
+      segments: [
+        { mode: "walk", fromStopId: "stop-1", toStopId: "stop-3", minutes: 5, cost: 0, crowdLevel: "green" },
+        { mode: "bus", lineId: "line-bus-201", fromStopId: "stop-3", toStopId: "stop-4", minutes: 14, cost: Math.round(cost * 0.5), crowdLevel: "yellow" },
+        { mode: "metro", lineId: "line-purple", fromStopId: "stop-4", toStopId: "stop-2", minutes: 5, cost: cost - Math.round(cost * 0.5), crowdLevel: "green" }
+      ]
+    };
+
     const ticket = {
       id: ticketId,
       journeyOptionId,
       userId,
       status: "active",
+      totalCost: cost,
       createdAt: new Date().toISOString(),
-      journeyOption: chosenOption || {
-        id: journeyOptionId,
-        type: "fastest",
-        totalMinutes: 24,
-        totalCost: cost,
-        totalWalkMeters: 450,
-        co2SavedGrams: 420,
-        segments: [
-          { mode: "walk", fromStopId: "stop-1", toStopId: "stop-3", minutes: 5, cost: 0, crowdLevel: "green" },
-          { mode: "bus", lineId: "line-bus-201", fromStopId: "stop-3", toStopId: "stop-4", minutes: 14, cost: 10, crowdLevel: "yellow" },
-          { mode: "metro", lineId: "line-purple", fromStopId: "stop-4", toStopId: "stop-2", minutes: 5, cost: 10, crowdLevel: "green" }
-        ]
-      }
+      journeyOption: ticketOption
     };
 
     state.tickets[ticketId] = ticket;
@@ -228,25 +318,90 @@ export const mockApi = {
       amount: -cost,
       ticketId,
       timestamp: new Date().toISOString(),
-      title: 'Ticket Booking'
+      title: cost === 0 ? `Free Walk Journey (${ticketId})` : `Unified Ticket Booking (${ticketId})`
     };
     state.walletTxns.unshift(txn);
+
+    saveStateToStorage();
 
     return { ticket, walletBalance: newBalance };
   },
 
   async getWallet(userId = "user-1") {
     await new Promise(r => setTimeout(r, 60));
+    if (state.wallets[userId] === undefined) {
+      state.wallets[userId] = 500;
+      saveStateToStorage();
+    }
     return {
-      balance: state.wallets[userId] ?? 500,
-      transactions: state.walletTxns.filter(t => t.userId === userId)
+      balance: state.wallets[userId],
+      currency: "INR",
+      transactions: state.walletTxns.filter(t => t.userId === userId || userId === 'user-1')
     };
   },
 
   async topUpWallet(userId = "user-1", amount = 100) {
     await new Promise(r => setTimeout(r, 100));
-    const currentBalance = state.wallets[userId] ?? 500;
-    const newBalance = currentBalance + amount;
+    const currentBalance = state.wallets[userId] !== undefined ? state.wallets[userId] : 500;
+    const newBalance = currentBalance + Number(amount);
+    state.wallets[userId] = newBalance;
+
+    const txn = {
+      id: `txn-${Date.now()}`,
+      userId,
+      amount: +amount,
+      ticketId: null,
+      timestamp: new Date().toISOString(),
+      title: 'Wallet Recharge'
+    };
+    state.walletTxns.unshift(txn);
+    saveStateToStorage();
+
+    return { balance: newBalance, transactions: state.walletTxns };
+  },
+
+  async getLiveTicketStatus(ticketId) {
+    await new Promise(r => setTimeout(r, 60));
+    const ticket = state.tickets[ticketId];
+    if (!ticket) {
+      return { status: "active", currentSegmentIndex: 0, ticket: null };
+    }
+
+    if (ticket.status === "delay_detected") {
+      return {
+        status: "delay_detected",
+        currentSegmentIndex: 1,
+        alert: "⚠️ Bus 201 is delayed by 15 minutes due to heavy traffic. An alternative route via Metro Purple Line is available that saves 12 minutes!",
+        alternativeOption: ticket.alternativeOption,
+        ticket: ticket,
+        journeyOption: ticket.journeyOption
+      };
+    }
+
+    if (ticket.status === "rerouted") {
+      return {
+        status: "rerouted",
+        currentSegmentIndex: 1,
+        alert: "✅ Switched to Metro Purple Line alternative route (Saved 12 minutes).",
+        rerouted: ticket.reroutedOption || ticket.journeyOption,
+        ticket: ticket,
+        journeyOption: ticket.reroutedOption || ticket.journeyOption
+      };
+    }
+
+    return {
+      status: ticket.status || "active",
+      currentSegmentIndex: 0,
+      alert: null,
+      ticket: ticket,
+      journeyOption: ticket.journeyOption
+    };
+  },
+
+  async topUpWallet(userId = "user-1", amount = 100) {
+    await new Promise(r => setTimeout(r, 100));
+    const currentBalance = state.wallets[userId] !== undefined ? state.wallets[userId] : 500;
+    const newBalance = currentBalance + Number(amount);
     state.wallets[userId] = newBalance;
 
     const txn = {
@@ -266,22 +421,37 @@ export const mockApi = {
     await new Promise(r => setTimeout(r, 60));
     const ticket = state.tickets[ticketId];
     if (!ticket) {
-      return { status: "active", currentSegmentIndex: 0 };
+      return { status: "active", currentSegmentIndex: 0, ticket: null };
+    }
+
+    if (ticket.status === "delay_detected") {
+      return {
+        status: "delay_detected",
+        currentSegmentIndex: 1,
+        alert: "⚠️ Bus 201 is delayed by 15 minutes due to heavy traffic. An alternative route via Metro Purple Line is available that saves 12 minutes!",
+        alternativeOption: ticket.alternativeOption,
+        ticket: ticket,
+        journeyOption: ticket.journeyOption
+      };
     }
 
     if (ticket.status === "rerouted") {
       return {
         status: "rerouted",
         currentSegmentIndex: 1,
-        alert: "⚠️ Bus 201 delayed by 15 mins due to heavy traffic. Auto-Rerouted via Metro Green & Purple Line (saving 8 mins vs waiting).",
-        rerouted: ticket.reroutedOption
+        alert: "✅ Switched to Metro Purple Line alternative route (Saved 12 minutes).",
+        rerouted: ticket.reroutedOption || ticket.journeyOption,
+        ticket: ticket,
+        journeyOption: ticket.reroutedOption || ticket.journeyOption
       };
     }
 
     return {
       status: ticket.status || "active",
       currentSegmentIndex: 0,
-      alert: null
+      alert: null,
+      ticket: ticket,
+      journeyOption: ticket.journeyOption
     };
   },
 
@@ -294,18 +464,18 @@ export const mockApi = {
     Object.keys(state.tickets).forEach(tId => {
       const ticket = state.tickets[tId];
       if (ticket.status === "active") {
-        ticket.status = "rerouted";
-        ticket.reroutedOption = {
+        ticket.status = "delay_detected";
+        ticket.alternativeOption = {
           id: `jo-rerouted-${Date.now()}`,
           type: "fastest",
-          totalMinutes: 31,
-          totalCost: 20,
+          totalMinutes: 22,
+          totalCost: (ticket.journeyOption ? ticket.journeyOption.totalCost : 32),
           totalWalkMeters: 380,
           co2SavedGrams: 490,
           segments: [
-            { mode: "walk", fromStopId: "stop-1", toStopId: "stop-10", minutes: 8, cost: 0, crowdLevel: "green" },
-            { mode: "metro", lineId: "line-purple", fromStopId: "stop-10", toStopId: "stop-4", minutes: 11, cost: 10, crowdLevel: "green" },
-            { mode: "metro", lineId: "line-purple", fromStopId: "stop-4", toStopId: "stop-2", minutes: 12, cost: 10, crowdLevel: "yellow" }
+            { mode: "walk", fromStopId: "stop-1", toStopId: "stop-10", minutes: 6, cost: 0, crowdLevel: "green" },
+            { mode: "metro", lineId: "line-purple", fromStopId: "stop-10", toStopId: "stop-4", minutes: 8, cost: 16, crowdLevel: "green" },
+            { mode: "metro", lineId: "line-purple", fromStopId: "stop-4", toStopId: "stop-2", minutes: 8, cost: 16, crowdLevel: "yellow" }
           ]
         };
         affectedTicketIds.push(tId);
@@ -316,11 +486,31 @@ export const mockApi = {
       id: `ALT-${Date.now()}`,
       line: lineId,
       severity: "High",
-      message: `Delay of ${delayMinutes} minutes reported on line ${lineId}. Rerouting passengers.`,
+      message: `Delay of ${delayMinutes} minutes reported on ${lineId}. Alternative routes computed.`,
       timestamp: "Just now"
     });
 
     return { affectedTicketIds };
+  },
+
+  async confirmReroute(ticketId) {
+    await new Promise(r => setTimeout(r, 100));
+    const ticket = state.tickets[ticketId];
+    if (ticket && ticket.alternativeOption) {
+      ticket.status = "rerouted";
+      ticket.reroutedOption = ticket.alternativeOption;
+    }
+    return { success: true, ticket };
+  },
+
+  async rejectReroute(ticketId) {
+    await new Promise(r => setTimeout(r, 100));
+    const ticket = state.tickets[ticketId];
+    if (ticket) {
+      ticket.status = "active";
+      delete ticket.alternativeOption;
+    }
+    return { success: true, ticket };
   },
 
   async getVisitorAttractions(category = "All") {
@@ -412,49 +602,108 @@ export const mockApi = {
     };
   },
 
-  // Auth Endpoints
+  // Auth State Store & Pre-seeded Accounts
+  users: {
+    'passenger@transitone.in': {
+      id: 'user-101',
+      name: 'Rahul Sharma',
+      email: 'passenger@transitone.in',
+      password: 'Password@123',
+      role: 'passenger',
+      country: 'India',
+      language: 'en',
+      age: 28,
+      accessibility: false,
+      token: 'jwt-mock-passenger-token-101'
+    },
+    'senior@transitone.in': {
+      id: 'user-102',
+      name: 'Savitri Devi',
+      email: 'senior@transitone.in',
+      password: 'Password@123',
+      role: 'passenger',
+      country: 'India',
+      language: 'hi',
+      age: 65,
+      accessibility: true,
+      token: 'jwt-mock-senior-token-102'
+    },
+    'tourist@transitone.in': {
+      id: 'user-103',
+      name: 'Sophie Martin',
+      email: 'tourist@transitone.in',
+      password: 'Password@123',
+      role: 'visitor',
+      country: 'France',
+      language: 'fr',
+      age: 34,
+      accessibility: false,
+      token: 'jwt-mock-tourist-token-103'
+    }
+  },
+
   async login(email, password) {
     await new Promise(r => setTimeout(r, 120));
-    return {
-      user: {
-        id: `user-${Date.now()}`,
-        name: email.split('@')[0] || 'Passenger User',
-        email,
-        role: 'passenger',
-        country: 'India',
-        preferences: { cheapest: true, fastest: true },
-        token: `mock-passenger-jwt-${Date.now()}`
-      }
-    };
+    if (!email || !password) {
+      throw new Error("Please enter both email and password.");
+    }
+
+    const key = email.trim().toLowerCase();
+    const existing = this.users[key];
+
+    if (!existing || existing.password !== password) {
+      throw new Error("Invalid email or password.");
+    }
+
+    return { user: { ...existing } };
   },
 
   async register(userData) {
     await new Promise(r => setTimeout(r, 150));
+    if (!userData.email || !userData.password) {
+      throw new Error("Email and password are required.");
+    }
+
+    const key = userData.email.trim().toLowerCase();
+    if (this.users[key]) {
+      throw new Error("Email is already registered. Please log in.");
+    }
+
     const isVisitor = userData.country && userData.country.toLowerCase() !== 'india';
-    return {
-      user: {
-        id: `user-${Date.now()}`,
-        name: userData.name || 'New Commuter',
-        email: userData.email || 'commuter@transitone.in',
-        role: isVisitor ? 'visitor' : 'passenger',
-        country: userData.country || 'India',
-        language: userData.language || 'en',
-        preferences: userData.preferences || {},
-        accessibility: userData.accessibility || false,
-        token: `mock-registered-jwt-${Date.now()}`
-      }
+    const ageNum = userData.age ? parseInt(userData.age, 10) : undefined;
+    const isSenior = ageNum !== undefined && ageNum > 50;
+
+    const newUser = {
+      id: `user-${Math.floor(1000 + Math.random() * 9000)}`,
+      name: userData.name || 'Commuter',
+      email: key,
+      password: userData.password,
+      role: isVisitor ? 'visitor' : 'passenger',
+      country: userData.country || 'India',
+      language: userData.language || 'en',
+      age: ageNum,
+      accessibility: isSenior ? true : !!userData.accessibility,
+      preferences: userData.preferences || {},
+      token: `jwt-registered-token-${Date.now()}`
     };
+
+    this.users[key] = newUser;
+    return { user: { ...newUser } };
   },
 
   async employeeLogin(staffId, dept, securityPin) {
     await new Promise(r => setTimeout(r, 150));
     if (!staffId || !securityPin) {
-      throw new Error("Invalid Staff ID or Security PIN");
+      throw new Error("Staff ID and Security PIN are required.");
+    }
+    if (securityPin.trim() !== '9921') {
+      throw new Error("Invalid Staff ID or Security PIN.");
     }
     return {
       user: {
-        id: staffId,
-        name: `Officer ${staffId}`,
+        id: staffId.toUpperCase(),
+        name: `Officer ${staffId.toUpperCase()}`,
+        email: `${staffId.toLowerCase()}@transit.gov.in`,
         role: 'employee',
         dept: dept || 'Operations',
         token: `mock-employee-jwt-${Date.now()}`
@@ -462,4 +711,5 @@ export const mockApi = {
     };
   }
 };
+
 

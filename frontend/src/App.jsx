@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 
+import LandingPage from './pages/LandingPage';
+import SettingsPage from './pages/SettingsPage';
 import SearchPage from './pages/SearchPage';
 import ResultsPage from './pages/ResultsPage';
 import TicketPage from './pages/TicketPage';
@@ -22,11 +24,33 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 
 import VoiceAssistant from './components/assistant/VoiceAssistant';
 import { USE_MOCK_API } from './services/api';
+import { initThemeFromUrlOrUser } from './store/uxProfileStore';
+import { getAuthUser } from './store/authStore';
 
 export default function App() {
   const [activeTicketId, setActiveTicketId] = useState(null);
   const [walletBalance, setWalletBalance] = useState(500);
   const [mockApiState, setMockApiState] = useState(USE_MOCK_API);
+
+  useEffect(() => {
+    // Parse URL parameter ?theme= or apply active user's theme status
+    initThemeFromUrlOrUser(getAuthUser());
+
+    // Fetch initial persistent wallet balance on app load
+    async function loadInitialWallet() {
+      try {
+        const activeUser = getAuthUser();
+        const userId = activeUser ? activeUser.id : 'user-1';
+        const walletRes = await api.getWallet(userId);
+        if (walletRes && typeof walletRes.balance === 'number') {
+          setWalletBalance(walletRes.balance);
+        }
+      } catch (e) {
+        console.warn("Could not fetch initial wallet balance:", e);
+      }
+    }
+    loadInitialWallet();
+  }, [mockApiState]);
 
   const handleTicketBooked = (ticketId, newBalance) => {
     setActiveTicketId(ticketId);
@@ -52,42 +76,63 @@ export default function App() {
         
         <main style={{ flex: 1 }}>
           <Routes>
+            {/* Landing Page as Default Initial Route */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+
             {/* Auth Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/employee-login" element={<EmployeeLoginPage />} />
 
-            {/* Passenger Experience Routes */}
+            {/* Protected Passenger Routes */}
             <Route
-              path="/"
-              element={<SearchPage mockApiChanged={mockApiState} />}
+              path="/search"
+              element={
+                <ProtectedRoute>
+                  <SearchPage mockApiChanged={mockApiState} />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/results"
               element={
-                <ResultsPage
-                  onTicketBooked={handleTicketBooked}
-                  mockApiChanged={mockApiState}
-                />
+                <ProtectedRoute>
+                  <ResultsPage
+                    onTicketBooked={handleTicketBooked}
+                    mockApiChanged={mockApiState}
+                  />
+                </ProtectedRoute>
               }
             />
             <Route
               path="/ticket/:ticketId"
-              element={<TicketPage mockApiChanged={mockApiState} />}
+              element={
+                <ProtectedRoute>
+                  <TicketPage mockApiChanged={mockApiState} onWalletUpdated={handleWalletUpdated} />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/wallet"
               element={
-                <WalletPage
-                  walletBalance={walletBalance}
-                  onWalletUpdated={handleWalletUpdated}
-                  mockApiChanged={mockApiState}
-                />
+                <ProtectedRoute>
+                  <WalletPage
+                    walletBalance={walletBalance}
+                    onWalletUpdated={handleWalletUpdated}
+                    mockApiChanged={mockApiState}
+                  />
+                </ProtectedRoute>
               }
             />
             <Route
               path="/analytics"
-              element={<AnalyticsPage />}
+              element={
+                <ProtectedRoute>
+                  <AnalyticsPage />
+                </ProtectedRoute>
+              }
             />
 
             {/* Foreign Visitor Experience Routes */}

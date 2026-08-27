@@ -26,8 +26,18 @@ export declare class AssistantController {
                 userId: string;
                 status: string;
                 createdAt: Date;
+                journeyOption: any;
             };
             walletBalance: any;
+        } | {
+            ticket: {
+                id: string;
+                journeyOptionId: string;
+                userId: string;
+                status: string;
+                createdAt: Date;
+            };
+            walletBalance: number;
         };
     } | {
         intent: string;

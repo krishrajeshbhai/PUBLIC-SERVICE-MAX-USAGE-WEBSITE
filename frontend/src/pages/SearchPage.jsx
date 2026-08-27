@@ -27,10 +27,11 @@ export default function SearchPage({ mockApiChanged }) {
       setError(null);
       try {
         const data = await api.getStops();
-        setStops(data);
-        if (data.length > 1) {
-          setOriginStopId(data[0].id); // Central Station
-          setDestinationStopId(data[1].id); // Tech Park
+        const validList = Array.isArray(data) ? data : [];
+        setStops(validList);
+        if (validList.length > 1) {
+          setOriginStopId(validList[0].id);
+          setDestinationStopId(validList[1].id);
         }
       } catch (err) {
         console.error("Failed to load stops:", err);

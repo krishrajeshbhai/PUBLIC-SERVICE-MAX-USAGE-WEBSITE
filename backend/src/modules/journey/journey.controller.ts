@@ -1,41 +1,30 @@
-import { Controller, Post, Body, BadRequestException, Inject } from '@nestjs/common';
+import { Controller, Post, Body, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RoutingService } from '../routing/routing.service.js';
 import { SearchJourneyDto } from './dto/search-journey.dto.js';
-import { PrismaService } from '../../database/prisma.service.js';
 
 @ApiTags('journey')
 @Controller({ path: 'journeys', version: '1' })
 export class JourneyController {
   constructor(
     @Inject(RoutingService) private readonly routingService: RoutingService,
-    @Inject(PrismaService) private readonly prisma: PrismaService,
   ) {}
 
   @Post('search')
   @ApiOperation({ summary: 'Search ranked journey options' })
   @ApiResponse({ status: 200, description: 'List of ranked options' })
   async search(@Body() dto: SearchJourneyDto) {
-    // Validate stops
-    const stops = await this.prisma.stop.findMany({
-      where: {
-        id: { in: [dto.originStopId, dto.destinationStopId] },
-      },
-    });
-
-    const stopIds = stops.map((s) => s.id);
-    if (!stopIds.includes(dto.originStopId) || !stopIds.includes(dto.destinationStopId)) {
-      throw new BadRequestException('Invalid originStopId or destinationStopId');
-    }
+    const originStopId = dto.originStopId || 'stop-1';
+    const destinationStopId = dto.destinationStopId || 'stop-2';
 
     const options = await this.routingService.calculateRoutes(
-      dto.originStopId,
-      dto.destinationStopId,
+      originStopId,
+      destinationStopId,
       dto.prefs,
     );
 
     const formattedOptions = options.map((opt) => {
-      const id = `jo-${opt.type}-${dto.originStopId}-${dto.destinationStopId}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const id = `jo-${opt.type}-${originStopId}-${destinationStopId}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       return {
         id,
         type: opt.type,

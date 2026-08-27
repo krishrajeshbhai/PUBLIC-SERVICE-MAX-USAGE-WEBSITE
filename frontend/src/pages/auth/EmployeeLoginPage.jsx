@@ -133,6 +133,33 @@ export default function EmployeeLoginPage() {
           </button>
         </form>
 
+        {/* 1-Click Demo Fill Box */}
+        <div style={{ marginTop: '20px', padding: '14px', background: 'rgba(245, 158, 11, 0.08)', borderRadius: 'var(--radius-sm)', border: '1px dashed rgba(245, 158, 11, 0.4)' }}>
+          <div style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 800, marginBottom: '6px' }}>
+            🔑 MOCK STAFF DEMO CREDENTIALS (CLICK TO AUTO-FILL)
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setStaffId('EMP-9921');
+              setDept('Operations');
+              setPin('9921');
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#fef08a',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              padding: 0,
+              textDecoration: 'underline'
+            }}
+          >
+            Staff ID: EMP-9921 | PIN: 9921
+          </button>
+        </div>
+
         <div style={{ textAlign: 'center', marginTop: '20px' }}>
           <Link to="/login" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <ArrowLeft size={14} /> Back to Passenger Login

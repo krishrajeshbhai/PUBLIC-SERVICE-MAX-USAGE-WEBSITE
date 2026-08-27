@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Post, Body, Headers, Inject } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Headers, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { BookingService } from './booking.service.js';
 import { BookTicketDto } from './dto/book-ticket.dto.js';
@@ -21,6 +21,15 @@ let BookingController = class BookingController {
     }
     async book(dto, idempotencyKey) {
         return this.bookingService.bookTicket(dto, idempotencyKey);
+    }
+    async getLiveStatus(id) {
+        return this.bookingService.getLiveStatus(id);
+    }
+    async confirmReroute(id) {
+        return this.bookingService.confirmReroute(id);
+    }
+    async rejectReroute(id) {
+        return this.bookingService.rejectReroute(id);
     }
 };
 __decorate([
@@ -33,6 +42,27 @@ __decorate([
     __metadata("design:paramtypes", [BookTicketDto, String]),
     __metadata("design:returntype", Promise)
 ], BookingController.prototype, "book", null);
+__decorate([
+    Get(':id/live'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], BookingController.prototype, "getLiveStatus", null);
+__decorate([
+    Post(':id/reroute/confirm'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], BookingController.prototype, "confirmReroute", null);
+__decorate([
+    Post(':id/reroute/reject'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], BookingController.prototype, "rejectReroute", null);
 BookingController = __decorate([
     ApiTags('booking'),
     Controller({ path: 'tickets', version: '1' }),

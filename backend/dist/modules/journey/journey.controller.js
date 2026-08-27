@@ -10,31 +10,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Post, Body, BadRequestException, Inject } from '@nestjs/common';
+import { Controller, Post, Body, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RoutingService } from '../routing/routing.service.js';
 import { SearchJourneyDto } from './dto/search-journey.dto.js';
-import { PrismaService } from '../../database/prisma.service.js';
 let JourneyController = class JourneyController {
     routingService;
-    prisma;
-    constructor(routingService, prisma) {
+    constructor(routingService) {
         this.routingService = routingService;
-        this.prisma = prisma;
     }
     async search(dto) {
-        const stops = await this.prisma.stop.findMany({
-            where: {
-                id: { in: [dto.originStopId, dto.destinationStopId] },
-            },
-        });
-        const stopIds = stops.map((s) => s.id);
-        if (!stopIds.includes(dto.originStopId) || !stopIds.includes(dto.destinationStopId)) {
-            throw new BadRequestException('Invalid originStopId or destinationStopId');
-        }
-        const options = await this.routingService.calculateRoutes(dto.originStopId, dto.destinationStopId, dto.prefs);
+        const originStopId = dto.originStopId || 'stop-1';
+        const destinationStopId = dto.destinationStopId || 'stop-2';
+        const options = await this.routingService.calculateRoutes(originStopId, destinationStopId, dto.prefs);
         const formattedOptions = options.map((opt) => {
-            const id = `jo-${opt.type}-${dto.originStopId}-${dto.destinationStopId}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            const id = `jo-${opt.type}-${originStopId}-${destinationStopId}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
             return {
                 id,
                 type: opt.type,
@@ -69,9 +59,7 @@ JourneyController = __decorate([
     ApiTags('journey'),
     Controller({ path: 'journeys', version: '1' }),
     __param(0, Inject(RoutingService)),
-    __param(1, Inject(PrismaService)),
-    __metadata("design:paramtypes", [RoutingService,
-        PrismaService])
+    __metadata("design:paramtypes", [RoutingService])
 ], JourneyController);
 export { JourneyController };
 //# sourceMappingURL=journey.controller.js.map

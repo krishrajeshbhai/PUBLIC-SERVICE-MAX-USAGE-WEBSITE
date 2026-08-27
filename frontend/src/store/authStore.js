@@ -1,30 +1,32 @@
 // authStore.js - Authentication & User Session State Manager
-
-const DEFAULT_GUEST_USER = {
-  id: 'user-1',
-  name: 'Demo Passenger',
-  email: 'passenger@transitone.in',
-  role: 'passenger', // 'passenger' | 'visitor' | 'employee'
-  country: 'India',
-  preferences: { cheapest: false, fastest: true, eco: true, walking: 'moderate' },
-  accessibility: false,
-  token: 'mock-jwt-token-12345'
-};
+import { initThemeFromUrlOrUser, resetUXProfileToDefault } from './uxProfileStore';
 
 function loadStoredUser() {
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
       const saved = localStorage.getItem('transitone_auth_user');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.id === 'user-1' || parsed.id === 'user-guest') {
+          localStorage.removeItem('transitone_auth_user');
+          return null;
+        }
+        return parsed;
+      }
     } catch (e) {
       console.warn("Error reading auth from localStorage", e);
     }
   }
-  return DEFAULT_GUEST_USER;
+  return null;
 }
 
 let currentUser = loadStoredUser();
 const listeners = new Set();
+
+// Synchronize theme on startup
+if (typeof window !== 'undefined') {
+  initThemeFromUrlOrUser(currentUser);
+}
 
 export function getAuthUser() {
   return currentUser ? { ...currentUser } : null;
@@ -43,6 +45,10 @@ export function setAuthUser(user) {
       localStorage.removeItem('transitone_auth_user');
     }
   }
+
+  // Update visual theme according to user profile or reset to default
+  initThemeFromUrlOrUser(currentUser);
+
   listeners.forEach(cb => cb(currentUser));
 }
 
@@ -53,4 +59,5 @@ export function subscribeAuth(cb) {
 
 export function logoutUser() {
   setAuthUser(null);
+  resetUXProfileToDefault();
 }

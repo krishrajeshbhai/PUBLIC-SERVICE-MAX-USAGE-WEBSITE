@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Clock, DollarSign, Footprints, Leaf, ArrowRight, ShieldCheck, Bus, Train, AlertCircle, CheckCircle } from 'lucide-react';
+import { Clock, DollarSign, Footprints, Leaf, ArrowRight, ShieldCheck, Bus, Train, AlertCircle, CheckCircle, Wallet, X, Check, Shield } from 'lucide-react';
 import { api } from '../services/api';
 import MapComponent from '../components/MapComponent';
+import { getAuthUser } from '../store/authStore';
 
 export default function ResultsPage({ onTicketBooked, mockApiChanged }) {
   const [searchParams] = useSearchParams();
@@ -15,6 +16,9 @@ export default function ResultsPage({ onTicketBooked, mockApiChanged }) {
   const [options, setOptions] = useState([]);
   const [stops, setStops] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [confirmingOption, setConfirmingOption] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(500);
+
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState(null);
@@ -28,14 +32,24 @@ export default function ResultsPage({ onTicketBooked, mockApiChanged }) {
       setLoading(true);
       setError(null);
       try {
-        const [stopsData, searchRes] = await Promise.all([
+        const activeUser = getAuthUser();
+        const userId = activeUser ? activeUser.id : 'user-1';
+
+        const [stopsData, searchRes, walletRes] = await Promise.all([
           api.getStops(),
-          api.searchJourneys(originId, destId, { accessible })
+          api.searchJourneys(originId, destId, { accessible }),
+          api.getWallet(userId)
         ]);
-        setStops(stopsData);
-        setOptions(searchRes.options || []);
-        if (searchRes.options && searchRes.options.length > 0) {
-          setSelectedOption(searchRes.options[0]);
+
+        const validStops = Array.isArray(stopsData) ? stopsData : [];
+        const validOptions = searchRes && Array.isArray(searchRes.options) ? searchRes.options : [];
+        setStops(validStops);
+        setOptions(validOptions);
+        if (walletRes && typeof walletRes.balance === 'number') {
+          setWalletBalance(walletRes.balance);
+        }
+        if (validOptions.length > 0) {
+          setSelectedOption(validOptions[0]);
         }
       } catch (err) {
         console.error("Failed to load journey results:", err);
@@ -47,14 +61,22 @@ export default function ResultsPage({ onTicketBooked, mockApiChanged }) {
     loadData();
   }, [originId, destId, accessible, mockApiChanged, navigate]);
 
-  const handleBook = async (option) => {
+  const openConfirmationModal = (option) => {
+    setConfirmingOption(option);
+  };
+
+  const handleConfirmBooking = async (option) => {
+    if (!option) return;
     setBooking(true);
     setError(null);
     try {
-      const result = await api.bookTicket('user-1', option.id, option);
+      const activeUser = getAuthUser();
+      const userId = activeUser ? activeUser.id : 'user-1';
+      const result = await api.bookTicket(userId, option.id, option);
       if (onTicketBooked) {
         onTicketBooked(result.ticket.id, result.walletBalance);
       }
+      setConfirmingOption(null);
       navigate(`/ticket/${result.ticket.id}`);
     } catch (err) {
       console.error("Booking error:", err);
@@ -217,6 +239,9 @@ export default function ResultsPage({ onTicketBooked, mockApiChanged }) {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{seg.minutes} min</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: seg.mode === 'walk' ? '#94a3b8' : '#34d399' }}>
+                          {seg.mode === 'walk' ? '₹0' : `₹${seg.cost}`}
+                        </span>
                         {seg.crowdLevel && (
                           <span className={`crowd-dot crowd-${seg.crowdLevel}`} title={`Crowd level: ${seg.crowdLevel}`}></span>
                         )}
@@ -225,17 +250,16 @@ export default function ResultsPage({ onTicketBooked, mockApiChanged }) {
                   ))}
                 </div>
 
-                {/* Action CTA */}
+                {/* Action CTA Button -> Opens Confirmation Modal */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleBook(opt);
+                    openConfirmationModal(opt);
                   }}
                   className="btn-primary"
                   style={{ width: '100%' }}
-                  disabled={booking}
                 >
-                  {booking ? 'Deducting Wallet & Issuing Ticket...' : `Book Unified Ticket (₹${opt.totalCost})`}
+                  Book Unified Ticket (₹{opt.totalCost})
                 </button>
               </div>
             );
@@ -255,6 +279,102 @@ export default function ResultsPage({ onTicketBooked, mockApiChanged }) {
           )}
         </div>
       </div>
+
+      {/* INTERACTIVE BOOKING CONFIRMATION MODAL */}
+      {confirmingOption && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.82)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px'
+        }}>
+          <div className="glass-panel" style={{
+            maxWidth: '540px',
+            width: '100%',
+            padding: '32px',
+            border: '2px solid #3b82f6',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)'
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+              <div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', padding: '4px 10px', borderRadius: 'var(--radius-full)', fontSize: '0.78rem', fontWeight: 800, marginBottom: '6px' }}>
+                  <Shield size={14} /> CONFIRM UNIFIED TICKET BOOKING
+                </div>
+                <h2 style={{ fontSize: '1.4rem', margin: 0 }}>Review & Deduct Wallet</h2>
+              </div>
+              <button onClick={() => setConfirmingOption(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={22} />
+              </button>
+            </div>
+
+            {/* Route Summary */}
+            <div style={{ padding: '16px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', marginBottom: '20px' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '6px' }}>SELECTED ROUTE ITINERARY</div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fff', marginBottom: '10px' }}>
+                {getStopName(originId)} ➔ {getStopName(destId)} ({confirmingOption.totalMinutes} mins)
+              </div>
+
+              {/* Segment breakdown */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {confirmingOption.segments.map((seg, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    <span>{seg.mode.toUpperCase()} ({getStopName(seg.fromStopId)} ➔ {getStopName(seg.toStopId)})</span>
+                    <strong style={{ color: seg.mode === 'walk' ? '#94a3b8' : '#34d399' }}>
+                      {seg.mode === 'walk' ? '₹0 (Walk)' : `₹${seg.cost}`}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Wallet Calculation Details */}
+            <div style={{ padding: '16px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(16, 185, 129, 0.3)', marginBottom: '28px' }}>
+              <div style={{ fontSize: '0.8rem', color: '#34d399', fontWeight: 800, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Wallet size={16} /> WALLET DEDUCTION BREAKDOWN
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '6px', color: '#fff' }}>
+                <span>Available Balance:</span>
+                <strong>₹{walletBalance}.00</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '6px', color: confirmingOption.totalCost === 0 ? '#34d399' : '#ef4444' }}>
+                <span>Total Ticket Fare:</span>
+                <strong>{confirmingOption.totalCost === 0 ? 'FREE (₹0.00)' : `-₹${confirmingOption.totalCost}.00`}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 800, borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '8px', color: '#34d399' }}>
+                <span>Balance After Booking:</span>
+                <span>₹{walletBalance - confirmingOption.totalCost}.00</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setConfirmingOption(null)}
+                className="btn-secondary"
+                style={{ flex: 1, justifyContent: 'center' }}
+                disabled={booking}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleConfirmBooking(confirmingOption)}
+                className="btn-primary"
+                style={{ flex: 2, justifyContent: 'center', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff' }}
+                disabled={booking}
+              >
+                <Check size={18} /> {booking ? 'Issuing Ticket...' : confirmingOption.totalCost === 0 ? 'Confirm & Issue Free Ticket (₹0.00)' : `Confirm & Deduct ₹${confirmingOption.totalCost}.00`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 var RedisService_1;
 import { Injectable, Logger } from '@nestjs/common';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 let RedisService = RedisService_1 = class RedisService {
     logger = new Logger(RedisService_1.name);
     client = null;

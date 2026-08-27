@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Ticket, QrCode, AlertTriangle, RefreshCw, CheckCircle, Clock, Zap, MapPin, Bus, Train, Footprints, ShieldCheck } from 'lucide-react';
+import { Ticket, QrCode, AlertTriangle, RefreshCw, CheckCircle, Clock, Zap, MapPin, Bus, Train, Footprints, ShieldCheck, Check, X } from 'lucide-react';
 import { api } from '../services/api';
 import MapComponent from '../components/MapComponent';
+import DynamicQRCode from '../components/ticket/DynamicQRCode';
+import { getAuthUser } from '../store/authStore';
 
-export default function TicketPage({ mockApiChanged }) {
+export default function TicketPage({ mockApiChanged, onWalletUpdated }) {
   const { ticketId } = useParams();
   const navigate = useNavigate();
+  const authUser = getAuthUser();
 
   const [ticketStatus, setTicketStatus] = useState(null);
   const [stops, setStops] = useState([]);
@@ -16,18 +19,24 @@ export default function TicketPage({ mockApiChanged }) {
   const [error, setError] = useState(null);
   const [lastPolled, setLastPolled] = useState(new Date());
 
-  // 1. Initial load for stops and ticket details
   useEffect(() => {
     async function init() {
       setLoading(true);
       try {
-        const stopsData = await api.getStops();
-        setStops(stopsData);
+        const userId = authUser ? authUser.id : 'user-1';
+        const [stopsData, liveRes, walletRes] = await Promise.all([
+          api.getStops(),
+          api.getLiveTicketStatus(ticketId),
+          api.getWallet(userId)
+        ]);
 
-        const liveRes = await api.getLiveTicketStatus(ticketId);
+        setStops(stopsData);
         setTicketStatus(liveRes);
         if (liveRes.rerouted) {
           setActiveOption(liveRes.rerouted);
+        }
+        if (walletRes && typeof walletRes.balance === 'number' && onWalletUpdated) {
+          onWalletUpdated(walletRes.balance);
         }
       } catch (err) {
         console.error("Error loading ticket:", err);
@@ -39,7 +48,6 @@ export default function TicketPage({ mockApiChanged }) {
     init();
   }, [ticketId, mockApiChanged]);
 
-  // 2. Poll live status every 5 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -57,20 +65,13 @@ export default function TicketPage({ mockApiChanged }) {
     return () => clearInterval(interval);
   }, [ticketId]);
 
-  // 3. Handle Simulate Delay Demo Button Click
   const handleSimulateDelay = async () => {
     setSimulating(true);
     setError(null);
     try {
-      // Inject delay on Bus 201 segment (line-bus-201 between stop-1 and stop-3)
       await api.simulateDelay('line-bus-201', 'stop-1', 'stop-3', 15);
-      
-      // Immediately fetch fresh status
       const updatedStatus = await api.getLiveTicketStatus(ticketId);
       setTicketStatus(updatedStatus);
-      if (updatedStatus.rerouted) {
-        setActiveOption(updatedStatus.rerouted);
-      }
     } catch (err) {
       console.error("Delay simulation error:", err);
       setError("Failed to simulate delay on server.");
@@ -79,27 +80,50 @@ export default function TicketPage({ mockApiChanged }) {
     }
   };
 
+  const handleConfirmReroute = async () => {
+    try {
+      const res = await api.confirmReroute(ticketId);
+      const liveRes = await api.getLiveTicketStatus(ticketId);
+      setTicketStatus(liveRes);
+      if (liveRes.rerouted) setActiveOption(liveRes.rerouted);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRejectReroute = async () => {
+    try {
+      await api.rejectReroute(ticketId);
+      const liveRes = await api.getLiveTicketStatus(ticketId);
+      setTicketStatus(liveRes);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const getStopName = (id) => {
     const s = stops.find(x => x.id === id);
     return s ? s.name : id;
   };
 
-  const isRerouted = ticketStatus && (ticketStatus.status === 'rerouted' || !!ticketStatus.rerouted);
+  const isDelayDetected = ticketStatus && ticketStatus.status === 'delay_detected';
+  const isRerouted = Boolean(ticketStatus && (ticketStatus.status === 'rerouted' || ticketStatus.rerouted));
 
-  // Fallback journey option structure if default option isn't cached
-  const displayOption = activeOption || (ticketStatus && ticketStatus.journeyOption) || {
-    id: 'jo-default',
+  const defaultFallbackOption = {
+    id: 'jo-fallback',
     type: 'fastest',
     totalMinutes: 24,
-    totalCost: 20,
-    totalWalkMeters: 450,
+    totalCost: 28,
+    totalWalkMeters: 350,
     co2SavedGrams: 420,
     segments: [
       { mode: 'walk', fromStopId: 'stop-1', toStopId: 'stop-3', minutes: 5, cost: 0, crowdLevel: 'green' },
-      { mode: 'bus', lineId: 'line-bus-201', fromStopId: 'stop-3', toStopId: 'stop-4', minutes: 14, cost: 10, crowdLevel: 'yellow' },
-      { mode: 'metro', lineId: 'line-purple', fromStopId: 'stop-4', toStopId: 'stop-2', minutes: 5, cost: 10, crowdLevel: 'green' }
+      { mode: 'bus', lineId: 'line-bus-201', fromStopId: 'stop-3', toStopId: 'stop-4', minutes: 14, cost: 14, crowdLevel: 'yellow' },
+      { mode: 'metro', lineId: 'line-purple', fromStopId: 'stop-4', toStopId: 'stop-2', minutes: 5, cost: 14, crowdLevel: 'green' }
     ]
   };
+
+  const displayOption = activeOption || (ticketStatus && (ticketStatus.journeyOption || (ticketStatus.ticket && ticketStatus.ticket.journeyOption) || ticketStatus.rerouted)) || defaultFallbackOption;
 
   if (loading) {
     return (
@@ -112,36 +136,55 @@ export default function TicketPage({ mockApiChanged }) {
 
   return (
     <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 24px 60px 24px' }}>
-      {/* Top Banner: Real-Time Delay & Reroute Alert */}
-      {isRerouted ? (
+      {/* Interactive Delay Detection Notification Card */}
+      {isDelayDetected ? (
         <div className="pulse-alert" style={{
-          padding: '20px 24px',
+          padding: '24px',
           background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.25) 100%)',
           border: '2px solid #f59e0b',
           borderRadius: 'var(--radius-md)',
-          marginBottom: '28px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '16px'
+          marginBottom: '28px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
             <div style={{ background: '#f59e0b', padding: '10px', borderRadius: '50%', display: 'flex' }}>
               <AlertTriangle size={24} color="#000" />
             </div>
             <div>
-              <div style={{ color: '#fef08a', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.01em' }}>
-                AUTOMATIC LIVE RE-ROUTE ACTIVATED
+              <div style={{ color: '#fef08a', fontWeight: 800, fontSize: '1.15rem' }}>
+                ⚠️ JOURNEY DISRUPTION DETECTED
               </div>
-              <div style={{ color: '#fef3c7', fontSize: '0.92rem', marginTop: '4px' }}>
-                {ticketStatus.alert || "Bus 201 delayed by 15 mins due to heavy traffic. TransitOne auto-rerouted your journey via Metro Purple Line!"}
+              <div style={{ color: '#fef3c7', fontSize: '0.95rem', marginTop: '4px' }}>
+                {ticketStatus.alert || "Bus 201 is delayed by 15 mins. An alternative route via Metro Purple Line is available that saves 12 minutes!"}
               </div>
             </div>
           </div>
-          <span className="badge" style={{ background: '#f59e0b', color: '#000', padding: '6px 14px', fontSize: '0.8rem', fontWeight: 800 }}>
-            ⚡ NEW OPTIMAL ROUTE
-          </span>
+
+          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+            <button onClick={handleConfirmReroute} className="btn-warning" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff' }}>
+              <Check size={18} /> Switch to New Route (Save 12 mins)
+            </button>
+            <button onClick={handleRejectReroute} className="btn-secondary">
+              <X size={18} /> Keep Current Route
+            </button>
+          </div>
+        </div>
+      ) : isRerouted ? (
+        <div style={{
+          padding: '20px 24px',
+          background: 'rgba(16, 185, 129, 0.15)',
+          border: '1px solid #10b981',
+          borderRadius: 'var(--radius-md)',
+          marginBottom: '28px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <CheckCircle size={22} color="#34d399" />
+            <span style={{ color: '#34d399', fontWeight: 700 }}>
+              Updated Route Active: Switched to Metro Purple Line (Saved 12 minutes)
+            </span>
+          </div>
         </div>
       ) : (
         <div style={{
@@ -162,12 +205,7 @@ export default function TicketPage({ mockApiChanged }) {
               Live Journey Active · Polling every 5s (Last checked {lastPolled.toLocaleTimeString()})
             </span>
           </div>
-          {/* Demo Trigger Button */}
-          <button
-            onClick={handleSimulateDelay}
-            className="btn-warning"
-            disabled={simulating}
-          >
+          <button onClick={handleSimulateDelay} className="btn-warning" disabled={simulating}>
             <Zap size={16} /> {simulating ? 'Injecting Delay...' : 'Simulate Live Delay (Demo)'}
           </button>
         </div>
@@ -183,7 +221,7 @@ export default function TicketPage({ mockApiChanged }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '32px', alignItems: 'start' }}>
         {/* Left Column: Digital Ticket & Connected Timeline */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Digital QR Ticket Box */}
+          {/* Digital Dynamic QR Ticket Box */}
           <div className="glass-panel" style={{ padding: '28px', position: 'relative', overflow: 'hidden' }}>
             <div style={{
               position: 'absolute',
@@ -210,7 +248,7 @@ export default function TicketPage({ mockApiChanged }) {
               </div>
             </div>
 
-            {/* QR Mockup & Details */}
+            {/* Dynamic SVG QR Generator & Fare Details */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -222,17 +260,22 @@ export default function TicketPage({ mockApiChanged }) {
               marginBottom: '24px'
             }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>PASSENGER ID</div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: '12px' }}>user-1</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>PASSENGER</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: '12px' }}>
+                  {authUser ? authUser.name : 'Passenger User'}
+                </div>
 
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>TOTAL FARE (AUTO-DEDUCTED)</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#34d399' }}>₹{displayOption.totalCost}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>DYNAMIC CALCULATED FARE</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#34d399' }}>₹{displayOption.totalCost}.00</div>
               </div>
 
-              {/* QR Visual */}
-              <div className="qr-box">
-                <QrCode size={70} color="#0f172a" />
-              </div>
+              {/* SVG QR Code Generator */}
+              <DynamicQRCode
+                ticketId={ticketId}
+                fare={displayOption.totalCost}
+                userName={authUser ? authUser.name : 'Passenger'}
+                size={100}
+              />
             </div>
 
             {/* Connected Multi-Modal Itinerary Timeline */}
@@ -250,7 +293,7 @@ export default function TicketPage({ mockApiChanged }) {
                       <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>
                         {seg.mode.toUpperCase()} {seg.lineId ? `(${seg.lineId})` : ''}
                       </span>
-                      <span style={{ fontSize: '0.8rem', color: '#60a5fa', fontWeight: 600 }}>{seg.minutes} mins</span>
+                      <span style={{ fontSize: '0.8rem', color: '#60a5fa', fontWeight: 600 }}>{seg.minutes} mins · ₹{seg.cost}</span>
                     </div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                       From <strong style={{ color: '#e5e7eb' }}>{getStopName(seg.fromStopId)}</strong> ➔ To <strong style={{ color: '#e5e7eb' }}>{getStopName(seg.toStopId)}</strong>

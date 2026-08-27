@@ -7,11 +7,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 export class BookTicketDto {
     userId;
     journeyOptionId;
+    chosenOption;
 }
 __decorate([
     ApiProperty({ example: 'user-1' }),
@@ -25,4 +26,8 @@ __decorate([
     IsNotEmpty(),
     __metadata("design:type", String)
 ], BookTicketDto.prototype, "journeyOptionId", void 0);
+__decorate([
+    IsOptional(),
+    __metadata("design:type", Object)
+], BookTicketDto.prototype, "chosenOption", void 0);
 //# sourceMappingURL=book-ticket.dto.js.map

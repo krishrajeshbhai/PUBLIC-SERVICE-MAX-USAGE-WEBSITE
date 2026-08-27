@@ -11,6 +11,8 @@ import { WalletModule } from './modules/wallet/wallet.module.js';
 import { BookingModule } from './modules/booking/booking.module.js';
 import { RealtimeModule } from './modules/realtime/realtime.module.js';
 import { OperationsModule } from './modules/operations/operations.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
+import { VisitorModule } from './modules/visitor/visitor.module.js';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { OperationsModule } from './modules/operations/operations.module.js';
     BookingModule,
     RealtimeModule,
     OperationsModule,
+    AuthModule,
+    VisitorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

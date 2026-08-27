@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Ticket, Wallet, BarChart3, Navigation, Database, Server, Compass, ShieldAlert, Globe, Eye, User, LogOut, LogIn } from 'lucide-react';
-import { api, USE_MOCK_API, setUseMockApi } from '../services/api';
+import { Search, Ticket, Wallet, BarChart3, Navigation, Database, Server, Compass, ShieldAlert, Globe, Eye, User, LogOut, LogIn, Settings } from 'lucide-react';
+import { api, USE_MOCK_API, setUseMockApi, subscribeMockApi } from '../services/api';
 import { LANGUAGES, getLanguage, setLanguage, subscribeLanguage, t } from '../i18n/i18n';
 import { getUXProfile, toggleSimplifiedMode, subscribeUXProfile } from '../store/uxProfileStore';
 import { getAuthUser, logoutUser, subscribeAuth } from '../store/authStore';
@@ -18,15 +18,16 @@ export default function Navbar({ activeTicketId, walletBalance, onToggleMockApi 
     const unsubLang = subscribeLanguage(setCurrentLangState);
     const unsubUX = subscribeUXProfile(setUxProfileState);
     const unsubAuth = subscribeAuth(setAuthUserState);
+    const unsubApi = subscribeMockApi(setIsMock);
     return () => {
       unsubLang();
       unsubUX();
       unsubAuth();
+      unsubApi();
     };
   }, []);
 
-  const handleToggle = (e) => {
-    const val = e.target.checked;
+  const handleToggle = (val) => {
     setIsMock(val);
     setUseMockApi(val);
     if (onToggleMockApi) onToggleMockApi(val);
@@ -39,6 +40,10 @@ export default function Navbar({ activeTicketId, walletBalance, onToggleMockApi 
 
   const isVisitorMode = location.pathname.startsWith('/visitor');
   const isEmployeeMode = location.pathname.startsWith('/employee');
+  const hideNavbarPaths = ['/', '/landing', '/login', '/register', '/employee-login'];
+  const shouldHideNavbar = hideNavbarPaths.includes(location.pathname) || isEmployeeMode;
+
+  if (shouldHideNavbar) return null;
 
   return (
     <header style={{
@@ -94,10 +99,10 @@ export default function Navbar({ activeTicketId, walletBalance, onToggleMockApi 
             gap: '2px'
           }}>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate(authUser ? '/search' : '/login')}
               style={{
-                background: !isVisitorMode && !isEmployeeMode ? '#3b82f6' : 'transparent',
-                color: !isVisitorMode && !isEmployeeMode ? '#ffffff' : 'var(--text-muted)',
+                background: location.pathname === '/search' || location.pathname === '/results' ? '#3b82f6' : 'transparent',
+                color: location.pathname === '/search' || location.pathname === '/results' ? '#ffffff' : 'var(--text-muted)',
                 border: 'none',
                 padding: '6px 14px',
                 borderRadius: 'var(--radius-full)',
@@ -150,7 +155,7 @@ export default function Navbar({ activeTicketId, walletBalance, onToggleMockApi 
         {!isVisitorMode && !isEmployeeMode && (
           <nav style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <Link
-              to="/"
+              to="/search"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -160,8 +165,8 @@ export default function Navbar({ activeTicketId, walletBalance, onToggleMockApi 
                 textDecoration: 'none',
                 fontSize: '0.88rem',
                 fontWeight: 600,
-                color: location.pathname === '/' ? '#ffffff' : 'var(--text-muted)',
-                background: location.pathname === '/' ? 'rgba(59, 130, 246, 0.2)' : 'transparent'
+                color: location.pathname === '/search' ? '#ffffff' : 'var(--text-muted)',
+                background: location.pathname === '/search' ? 'rgba(59, 130, 246, 0.2)' : 'transparent'
               }}
             >
               <Search size={15} /> Search
@@ -225,6 +230,24 @@ export default function Navbar({ activeTicketId, walletBalance, onToggleMockApi 
             >
               <BarChart3 size={15} /> Insights
             </Link>
+
+            <Link
+              to="/settings"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 14px',
+                borderRadius: 'var(--radius-sm)',
+                textDecoration: 'none',
+                fontSize: '0.88rem',
+                fontWeight: 600,
+                color: location.pathname === '/settings' ? '#ffffff' : 'var(--text-muted)',
+                background: location.pathname === '/settings' ? 'rgba(6, 182, 212, 0.2)' : 'transparent'
+              }}
+            >
+              <Settings size={15} /> Settings
+            </Link>
           </nav>
         )}
 
@@ -233,7 +256,15 @@ export default function Navbar({ activeTicketId, walletBalance, onToggleMockApi 
           {/* User Auth Pill / Login Actions */}
           {authUser ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 10px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-subtle)' }}>
-              <User size={14} color="#60a5fa" />
+              {authUser.avatar ? (
+                authUser.avatar.startsWith('http') ? (
+                  <img src={authUser.avatar} alt="Avatar" style={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <span style={{ fontSize: '0.9rem' }}>{authUser.avatar}</span>
+                )
+              ) : (
+                <User size={14} color="#60a5fa" />
+              )}
               <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff' }}>{authUser.name}</span>
               <button onClick={handleLogout} title="Logout" style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                 <LogOut size={13} />
@@ -312,24 +343,55 @@ export default function Navbar({ activeTicketId, walletBalance, onToggleMockApi 
             </div>
           </Link>
 
-          {/* API Mode Selector */}
+          {/* Segmented API Mode Selector */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(255, 255, 255, 0.04)',
+            background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid var(--border-subtle)',
             borderRadius: 'var(--radius-full)',
-            padding: '4px 10px',
-            fontSize: '0.75rem',
-            color: 'var(--text-muted)'
+            padding: '3px'
           }}>
-            {isMock ? <Database size={13} color="#f59e0b" /> : <Server size={13} color="#10b981" />}
-            <span style={{ fontWeight: 600 }}>{isMock ? 'Mock' : 'Express'}</span>
-            <label className="toggle-switch">
-              <input type="checkbox" checked={isMock} onChange={handleToggle} />
-              <span className="slider"></span>
-            </label>
+            <button
+              type="button"
+              onClick={() => handleToggle(true)}
+              style={{
+                background: isMock ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'transparent',
+                color: isMock ? '#000000' : 'var(--text-muted)',
+                border: 'none',
+                padding: '4px 10px',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Database size={13} /> Mock
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggle(false)}
+              style={{
+                background: !isMock ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
+                color: !isMock ? '#ffffff' : 'var(--text-muted)',
+                border: 'none',
+                padding: '4px 10px',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Server size={13} /> Express
+            </button>
           </div>
         </div>
       </div>

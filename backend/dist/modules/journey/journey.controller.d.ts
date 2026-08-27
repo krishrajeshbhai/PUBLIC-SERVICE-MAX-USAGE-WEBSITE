@@ -1,10 +1,8 @@
 import { RoutingService } from '../routing/routing.service.js';
 import { SearchJourneyDto } from './dto/search-journey.dto.js';
-import { PrismaService } from '../../database/prisma.service.js';
 export declare class JourneyController {
     private readonly routingService;
-    private readonly prisma;
-    constructor(routingService: RoutingService, prisma: PrismaService);
+    constructor(routingService: RoutingService);
     search(dto: SearchJourneyDto): Promise<{
         options: {
             id: string;

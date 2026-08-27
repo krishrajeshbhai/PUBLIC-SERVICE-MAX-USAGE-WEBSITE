@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 
 @Injectable()
 export class RedisService implements OnModuleInit {
@@ -18,7 +18,7 @@ export class RedisService implements OnModuleInit {
         connectTimeout: 2000,
       });
 
-      this.client.on('error', (err) => {
+      this.client.on('error', (err: Error) => {
         if (!this.useFallback) {
           this.logger.warn(`Redis error: ${err.message}. Switching to in-memory fallback.`);
           this.useFallback = true;

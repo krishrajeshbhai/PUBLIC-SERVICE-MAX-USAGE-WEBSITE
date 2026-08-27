@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bus, Train, MapPin, RefreshCw, Shield, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Bus, Train, MapPin, RefreshCw, Shield, CheckCircle2, AlertTriangle, LogOut } from 'lucide-react';
 import { api } from '../../services/api';
 import MapComponent from '../../components/MapComponent';
+import { logoutUser } from '../../store/authStore';
 
 export default function EmployeeVehiclesPage() {
   const navigate = useNavigate();
@@ -25,11 +26,21 @@ export default function EmployeeVehiclesPage() {
     loadData();
   }, []);
 
+  const handleStaffLogout = () => {
+    logoutUser();
+    navigate('/employee-login');
+  };
+
   return (
     <div style={{ maxWidth: '1380px', margin: '0 auto', padding: '32px 24px 60px 24px' }}>
-      <button onClick={() => navigate('/employee')} className="btn-secondary" style={{ marginBottom: '24px' }}>
-        <ArrowLeft size={16} /> Back to Operations Dashboard
-      </button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <button onClick={() => navigate('/employee')} className="btn-secondary">
+          <ArrowLeft size={16} /> Back to Operations Dashboard
+        </button>
+        <button onClick={handleStaffLogout} className="btn-warning" style={{ padding: '8px 16px' }}>
+          <LogOut size={16} /> Log Out Staff
+        </button>
+      </div>
 
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '12px' }}>

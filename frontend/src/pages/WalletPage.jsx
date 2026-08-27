@@ -3,7 +3,11 @@ import { Wallet, PlusCircle, ArrowDownRight, ArrowUpRight, History, Leaf, Shield
 import { api } from '../services/api';
 import { t } from '../i18n/i18n';
 
+import { getAuthUser } from '../store/authStore';
+
 export default function WalletPage({ walletBalance, onWalletUpdated, mockApiChanged }) {
+  const authUser = getAuthUser();
+  const userId = authUser ? authUser.id : 'user-1';
   const [walletData, setWalletData] = useState({ balance: walletBalance ?? 500, transactions: [] });
   const [loading, setLoading] = useState(true);
 
@@ -11,7 +15,7 @@ export default function WalletPage({ walletBalance, onWalletUpdated, mockApiChan
     async function fetchWallet() {
       setLoading(true);
       try {
-        const res = await api.getWallet('user-1');
+        const res = await api.getWallet(userId);
         setWalletData(res);
         if (onWalletUpdated) onWalletUpdated(res.balance);
       } catch (err) {
@@ -21,11 +25,11 @@ export default function WalletPage({ walletBalance, onWalletUpdated, mockApiChan
       }
     }
     fetchWallet();
-  }, [mockApiChanged]);
+  }, [userId, mockApiChanged]);
 
   const handleTopUp = async (amount) => {
     try {
-      const res = await api.topUpWallet('user-1', amount);
+      const res = await api.topUpWallet(userId, amount);
       setWalletData(res);
       if (onWalletUpdated) onWalletUpdated(res.balance);
     } catch (e) {
