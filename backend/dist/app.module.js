@@ -5,13 +5,34 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
+import { DatabaseModule } from './database/database.module.js';
+import { RedisModule } from './modules/redis/redis.module.js';
+import { TransportModule } from './modules/transport/transport.module.js';
+import { RoutingModule } from './modules/routing/routing.module.js';
+import { JourneyModule } from './modules/journey/journey.module.js';
+import { WalletModule } from './modules/wallet/wallet.module.js';
+import { BookingModule } from './modules/booking/booking.module.js';
+import { RealtimeModule } from './modules/realtime/realtime.module.js';
+import { OperationsModule } from './modules/operations/operations.module.js';
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
     Module({
-        imports: [],
+        imports: [
+            ConfigModule.forRoot({ isGlobal: true }),
+            DatabaseModule,
+            RedisModule,
+            TransportModule,
+            RoutingModule,
+            JourneyModule,
+            WalletModule,
+            BookingModule,
+            RealtimeModule,
+            OperationsModule,
+        ],
         controllers: [AppController],
         providers: [AppService],
     })
