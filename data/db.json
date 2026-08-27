@@ -267,13 +267,13 @@
   ],
   "tickets": [
     {
-      "id": "tkt-1787826594644-29",
-      "journeyOptionId": "jo-fastest-stop-10-stop-5-1787826594640-509",
+      "id": "tkt-1787826640331-260",
+      "journeyOptionId": "jo-fastest-stop-10-stop-5-1787826640327-26",
       "userId": "user-1",
       "status": "rerouted",
-      "createdAt": "2026-08-27T10:29:54.644Z",
+      "createdAt": "2026-08-27T10:30:40.331Z",
       "journeyOption": {
-        "id": "jo-fastest-stop-10-stop-5-1787826594643-495",
+        "id": "jo-fastest-stop-10-stop-5-1787826640330-718",
         "type": "fastest",
         "totalMinutes": 17,
         "totalCost": 60,
@@ -292,35 +292,62 @@
         ]
       },
       "reroutedJourneyOption": {
-        "id": "jo-fastest-stop-5-stop-5-1787826594655-11",
+        "id": "jo-fastest-stop-10-stop-5-1787826640342-653",
         "type": "fastest",
-        "totalMinutes": 0,
-        "totalCost": 0,
-        "totalWalkMeters": 0,
-        "co2SavedGrams": 0,
-        "segments": []
+        "totalMinutes": 29,
+        "totalCost": 10,
+        "totalWalkMeters": 800,
+        "co2SavedGrams": 1008,
+        "segments": [
+          {
+            "mode": "walk",
+            "fromStopId": "stop-10",
+            "toStopId": "stop-1",
+            "minutes": 10,
+            "cost": 0,
+            "crowdLevel": "green"
+          },
+          {
+            "mode": "bus",
+            "lineId": "line-bus-500",
+            "fromStopId": "stop-1",
+            "toStopId": "stop-2",
+            "minutes": 9,
+            "cost": 5,
+            "crowdLevel": "yellow"
+          },
+          {
+            "mode": "bus",
+            "lineId": "line-bus-201",
+            "fromStopId": "stop-2",
+            "toStopId": "stop-5",
+            "minutes": 10,
+            "cost": 5,
+            "crowdLevel": "green"
+          }
+        ]
       },
       "alert": "Delay on Purple Line near Vidhana Soudha. Rerouted to destination via fastest path."
     }
   ],
   "walletTxns": [
     {
-      "id": "txn-1787826594645",
+      "id": "txn-1787826640332",
       "userId": "user-1",
       "amount": -60,
-      "ticketId": "tkt-1787826594644-29",
-      "timestamp": "2026-08-27T10:29:54.645Z"
+      "ticketId": "tkt-1787826640331-260",
+      "timestamp": "2026-08-27T10:30:40.332Z"
     }
   ],
   "delayEvents": [
     {
-      "id": "delay-1787826594652",
+      "id": "delay-1787826640340",
       "segmentKey": "line-purple+stop-10+stop-9",
       "lineId": "line-purple",
       "fromStopId": "stop-10",
       "toStopId": "stop-9",
       "delayMinutes": 15,
-      "createdAt": "2026-08-27T10:29:54.652Z"
+      "createdAt": "2026-08-27T10:30:40.340Z"
     }
   ]
 }
