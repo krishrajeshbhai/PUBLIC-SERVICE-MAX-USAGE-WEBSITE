@@ -1,0 +1,421 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  countryCode   String?
+  language      String    @default("en")
+  role          String    @default("PASSENGER") // e.g. PASSENGER, VISITOR, DRIVER, etc.
+  visitorStatus String?   @default("NONE") // e.g. NONE, VISITOR, RESIDENT, STUDENT
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  wallet        Wallet?
+  bookings      Booking[]
+  employees     Employee[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+  rewardWallet  RewardWallet?
+  savedPlaces   SavedPlace[]
+
+  @@map("users")
+}
+
+model Operator {
+  id           String     @id @default(uuid())
+  name         String
+  code         String     @unique
+  contactEmail String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  employees Employee[]
+  routes    Route[]
+  vehicles  Vehicle[]
+  incidents Incident[]
+  fares     Fare[]
+
+  @@map("operators")
+}
+
+model Employee {
+  id         String   @id @default(uuid())
+  userId     String
+  operatorId String
+  employeeId String   @unique
+  role       String   @default("STATION_STAFF")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  operator Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+
+  @@map("employees")
+}
+
+model Stop {
+  id          String   @id
+  name        String
+  lat         Float
+  lng         Float
+  noStairs    Boolean  @default(true)
+  code        String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  routeStops        RouteStop[]
+  schedules         Schedule[]
+  fareSource        Fare[]        @relation("FareSource")
+  fareDestination   Fare[]        @relation("FareDestination")
+  segmentSource     JourneySegment[] @relation("SegSource")
+  segmentDest       JourneySegment[] @relation("SegDest")
+
+  @@map("stops")
+}
+
+model Route {
+  id         String   @id
+  operatorId String
+  shortName  String
+  longName   String
+  type       String   // e.g. "bus" or "metro"
+  color      String?
+  textColor  String?  @default("#ffffff")
+  noStairs   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  operator   Operator    @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  routeStops RouteStop[]
+  trips      Trip[]
+
+  @@map("routes")
+}
+
+model RouteStop {
+  id           String @id @default(uuid())
+  routeId      String
+  stopId       String
+  stopSequence Int
+  hopMinutes   Int    @default(3)
+  hopCost      Int    @default(5)
+
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  stop  Stop  @relation(fields: [stopId], references: [id], onDelete: Cascade)
+
+  @@unique([routeId, stopSequence])
+  @@map("route_stops")
+}
+
+model Trip {
+  id          String   @id
+  routeId     String
+  serviceId   String?
+  headsign    String?
+  directionId Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  route     Route      @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  schedules Schedule[]
+  vehicles  Vehicle[]
+
+  @@map("trips")
+}
+
+model Schedule {
+  id            String   @id @default(uuid())
+  tripId        String
+  stopId        String
+  arrivalTime   String   // e.g. "08:30:00"
+  departureTime String   // e.g. "08:31:00"
+  stopSequence  Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  stop Stop @relation(fields: [stopId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, stopSequence])
+  @@map("schedules")
+}
+
+model Vehicle {
+  id           String   @id
+  operatorId   String
+  tripId       String?
+  licensePlate String?
+  label        String?
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  operator  Operator  @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  trip      Trip?     @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  locations VehicleLocation[]
+
+  @@map("vehicles")
+}
+
+model Fare {
+  id                String   @id @default(uuid())
+  operatorId        String
+  sourceStopId      String
+  destinationStopId String
+  price             Int
+  mode              String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  operator    Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  source      Stop     @relation("FareSource", fields: [sourceStopId], references: [id], onDelete: Cascade)
+  destination Stop     @relation("FareDestination", fields: [destinationStopId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceStopId, destinationStopId])
+  @@map("fares")
+}
+
+model Journey {
+  id           String   @id @default(uuid())
+  userId       String
+  type         String   // fastest, cheapest, least_walking, accessible
+  totalMinutes Int
+  totalCost    Int
+  totalWalkMeters Int
+  co2SavedGrams Int
+  createdAt    DateTime @default(now())
+
+  segments JourneySegment[]
+  bookings Booking[]
+
+  @@map("journeys")
+}
+
+model JourneySegment {
+  id          String   @id @default(uuid())
+  journeyId   String
+  mode        String   // walk, bus, metro
+  lineId      String?
+  fromStopId  String
+  toStopId    String
+  minutes     Int
+  cost        Int
+  crowdLevel  String   @default("green")
+  sequence    Int
+
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  from    Stop    @relation("SegSource", fields: [fromStopId], references: [id])
+  to      Stop    @relation("SegDest", fields: [toStopId], references: [id])
+
+  @@map("journey_segments")
+}
+
+model Booking {
+  id             String        @id @default(uuid())
+  userId         String
+  journeyId      String
+  amount         Int
+  status         String        @default("INITIATED") // INITIATED, PENDING, CONFIRMED, etc.
+  idempotencyKey String        @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  journey      Journey            @relation(fields: [journeyId], references: [id])
+  tickets      Ticket[]
+  payments     Payment[]
+  transactions WalletTransaction[]
+
+  @@map("bookings")
+}
+
+model Ticket {
+  id             String       @id @default(uuid())
+  bookingId      String
+  status         String       @default("ACTIVE") // ACTIVE, COMPLETED, REROUTED
+  qrCode         String?
+  alert          String?
+  reroutedJourneyOptionId String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("tickets")
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Int      @default(0)
+  currency  String   @default("INR")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id            String            @id @default(uuid())
+  walletId      String
+  userId        String
+  amount        Int
+  currency      String            @default("INR")
+  type          String            // CREDIT, DEBIT, HOLD, etc.
+  status        String            @default("COMPLETED") // PENDING, COMPLETED, FAILED
+  ticketId      String?
+  bookingId     String?
+  operatorId    String?
+  createdAt     DateTime          @default(now())
+
+  wallet  Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@map("wallet_transactions")
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  bookingId     String
+  transactionId String   @unique
+  amount        Int
+  currency      String   @default("INR")
+  status        String   @default("SUCCESS")
+  provider      String   @default("UPI")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model Incident {
+  id             String           @id @default(uuid())
+  operatorId     String
+  type           String           // e.g. "accident", "maintenance"
+  severity       String           @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  status         String           @default("OPEN") // OPEN, INVESTIGATING, RESOLVED, CLOSED
+  location       String?
+  description    String
+  createdBy      String
+  createdAt      DateTime         @default(now())
+  resolvedAt     DateTime?
+  updatedAt      DateTime         @updatedAt
+
+  operator Operator       @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  alerts   ServiceAlert[]
+
+  @@map("incidents")
+}
+
+model ServiceAlert {
+  id          String   @id @default(uuid())
+  incidentId  String
+  title       String
+  description String
+  url         String?
+  effect      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@map("service_alerts")
+}
+
+model VehicleLocation {
+  id        String   @id @default(uuid())
+  vehicleId String
+  lat       Float
+  lng       Float
+  bearing   Float?
+  speed     Float?
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_locations")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("INFO")
+  status    String   @default("UNREAD")
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model RewardWallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions RewardTransaction[]
+
+  @@map("reward_wallets")
+}
+
+model RewardTransaction {
+  id             String   @id @default(uuid())
+  rewardWalletId String
+  points         Int
+  type           String   // CREDIT, DEBIT
+  description    String
+  createdAt      DateTime @default(now())
+
+  wallet RewardWallet @relation(fields: [rewardWalletId], references: [id], onDelete: Cascade)
+
+  @@map("reward_transactions")
+}
+
+model SavedPlace {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String   // Home, Office, etc.
+  lat       Float
+  lng       Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("saved_places")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  action     String
+  resource   String
+  resourceId String?
+  details    String?
+  timestamp  DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
+}
