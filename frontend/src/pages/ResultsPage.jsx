@@ -4,6 +4,7 @@ import { Clock, DollarSign, Footprints, Leaf, ArrowRight, ShieldCheck, Bus, Trai
 import { api } from '../services/api';
 import MapComponent from '../components/MapComponent';
 import { getAuthUser } from '../store/authStore';
+import { getUXProfile } from '../store/uxProfileStore';
 
 export default function ResultsPage({ onTicketBooked, mockApiChanged }) {
   const [searchParams] = useSearchParams();
@@ -42,7 +43,27 @@ export default function ResultsPage({ onTicketBooked, mockApiChanged }) {
         ]);
 
         const validStops = Array.isArray(stopsData) ? stopsData : [];
-        const validOptions = searchRes && Array.isArray(searchRes.options) ? searchRes.options : [];
+        let validOptions = searchRes && Array.isArray(searchRes.options) ? searchRes.options : [];
+
+        // Check if Senior Mode or Senior Age > 50 applies 50% Concession
+        const uxProfile = getUXProfile();
+        const isSeniorMode = uxProfile.mode === 'simplified' || (activeUser && activeUser.age > 50);
+
+        if (isSeniorMode) {
+          validOptions = validOptions.map(opt => {
+            const discountedCost = opt.totalCost === 0 ? 0 : Math.max(1, Math.round(opt.totalCost * 0.5));
+            return {
+              ...opt,
+              totalCost: discountedCost,
+              seniorConcessionApplied: true,
+              segments: opt.segments.map(s => ({
+                ...s,
+                cost: s.mode === 'walk' ? 0 : Math.max(1, Math.round(s.cost * 0.5))
+              }))
+            };
+          });
+        }
+
         setStops(validStops);
         setOptions(validOptions);
         if (walletRes && typeof walletRes.balance === 'number') {

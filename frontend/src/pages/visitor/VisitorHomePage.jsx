@@ -29,22 +29,43 @@ export default function VisitorHomePage() {
 
   return (
     <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 24px 60px 24px' }}>
-      {/* Hero Welcome Banner */}
+      {/* Hero Welcome Banner with Graphic */}
       <div className="glass-panel" style={{
-        padding: '36px',
-        background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%)',
+        padding: 0,
+        marginBottom: '40px',
+        overflow: 'hidden',
         border: '1px solid rgba(6, 182, 212, 0.4)',
-        marginBottom: '40px'
+        boxShadow: '0 20px 45px rgba(0, 0, 0, 0.7)'
       }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(255, 255, 255, 0.1)', fontSize: '0.82rem', fontWeight: 700, color: '#22d3ee', marginBottom: '16px' }}>
-          <Globe size={16} /> FOREIGN VISITOR & TOURIST GUIDE
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          alignItems: 'center'
+        }}>
+          <div style={{ padding: '40px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(6, 182, 212, 0.2)', fontSize: '0.82rem', fontWeight: 800, color: '#22d3ee', marginBottom: '16px' }}>
+              <Globe size={16} /> FOREIGN VISITOR & TOURIST GUIDE
+            </div>
+            <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', marginBottom: '14px', lineHeight: 1.15 }}>
+              {t('welcomeVisitor')}
+            </h1>
+            <p style={{ color: '#e2e8f0', fontSize: '1.08rem', maxWidth: '620px', lineHeight: '1.6', margin: 0 }}>
+              {t('visitorSubtitle')}. Save up to 85% compared to private taxis with guided step-by-step transit connections in your native language.
+            </p>
+          </div>
+          <div style={{ height: '100%', minHeight: '260px', position: 'relative' }}>
+            <img
+              src="/transit_futuristic_metro.png"
+              alt="Futuristic Metro"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+            <div style={{
+              position: 'absolute',
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: 'linear-gradient(90deg, rgba(13, 19, 36, 0.95) 0%, transparent 60%)'
+            }}></div>
+          </div>
         </div>
-        <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', marginBottom: '14px', lineHeight: 1.15 }}>
-          {t('welcomeVisitor')}
-        </h1>
-        <p style={{ color: '#e2e8f0', fontSize: '1.1rem', maxWidth: '720px', margin: 0 }}>
-          {t('visitorSubtitle')}. Enjoy 80% cost savings compared to taxis with step-by-step guided instructions in your language.
-        </p>
       </div>
 
       {/* Category Pills Filter */}

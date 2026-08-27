@@ -48,12 +48,18 @@ export default function Navbar({ activeTicketId, walletBalance, onToggleMockApi 
   return (
     <header style={{
       position: 'sticky',
-      top: 0,
+      top: '12px',
       zIndex: 1000,
-      background: 'rgba(9, 13, 22, 0.88)',
-      backdropFilter: 'blur(16px)',
-      borderBottom: '1px solid var(--border-subtle)',
-      padding: '10px 24px'
+      margin: '0 auto 16px auto',
+      width: '96%',
+      maxWidth: '1420px',
+      background: 'rgba(11, 16, 30, 0.82)',
+      backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
+      border: '1px solid rgba(255, 255, 255, 0.12)',
+      borderRadius: 'var(--radius-lg)',
+      padding: '10px 24px',
+      boxShadow: '0 16px 40px -10px rgba(0, 0, 0, 0.7), 0 0 30px rgba(59, 130, 246, 0.15)'
     }}>
       <div style={{
         maxWidth: '1380px',

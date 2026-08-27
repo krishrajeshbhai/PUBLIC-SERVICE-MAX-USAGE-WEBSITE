@@ -15,8 +15,28 @@ const DEFAULT_PROFILE = {
   reducedMotion: false,
 };
 
-let currentProfile = { ...DEFAULT_PROFILE };
+const DB_KEY = 'transitone_ux_profile_v3';
+
+function loadProfileFromStorage() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.warn("Error loading UX profile:", e);
+  }
+  return { ...DEFAULT_PROFILE };
+}
+
+let currentProfile = loadProfileFromStorage();
 const listeners = new Set();
+
+function saveProfileToStorage() {
+  try {
+    localStorage.setItem(DB_KEY, JSON.stringify(currentProfile));
+  } catch (e) {
+    console.warn("Error saving UX profile:", e);
+  }
+}
 
 export function getUXProfile() {
   return { ...currentProfile };
@@ -24,12 +44,14 @@ export function getUXProfile() {
 
 export function updateUXProfile(updates) {
   currentProfile = { ...currentProfile, ...updates };
+  saveProfileToStorage();
   listeners.forEach(cb => cb(currentProfile));
   applyBodyClasses();
 }
 
 export function resetUXProfileToDefault() {
   currentProfile = { ...DEFAULT_PROFILE };
+  saveProfileToStorage();
   listeners.forEach(cb => cb(currentProfile));
   applyBodyClasses();
 }
@@ -40,12 +62,13 @@ export function subscribeUXProfile(cb) {
 }
 
 export function toggleSimplifiedMode() {
-  const newMode = currentProfile.mode === UX_MODES.STANDARD ? UX_MODES.SIMPLIFIED : UX_MODES.STANDARD;
+  const isSenior = currentProfile.mode !== UX_MODES.SIMPLIFIED;
+  const newMode = isSenior ? UX_MODES.SIMPLIFIED : UX_MODES.STANDARD;
   updateUXProfile({
     mode: newMode,
-    fontSize: newMode === UX_MODES.SIMPLIFIED ? 'large' : 'medium',
-    highContrast: newMode === UX_MODES.SIMPLIFIED,
-    theme: newMode === UX_MODES.SIMPLIFIED ? 'contrast' : (currentProfile.theme || 'dark')
+    fontSize: isSenior ? 'large' : 'medium',
+    highContrast: isSenior,
+    theme: isSenior ? 'contrast' : 'dark'
   });
 }
 

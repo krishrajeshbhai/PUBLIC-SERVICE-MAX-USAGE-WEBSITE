@@ -207,9 +207,9 @@ export default function SearchPage({ mockApiChanged }) {
 
           <form onSubmit={handleSearch}>
             {/* Origin Picker */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                {t('fromLabel').toUpperCase()}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#38bdf8', marginBottom: '8px', letterSpacing: '0.05em' }}>
+                STARTING DEPARTURE STATION
               </label>
               <div style={{ position: 'relative' }}>
                 <select
@@ -218,12 +218,13 @@ export default function SearchPage({ mockApiChanged }) {
                   disabled={loadingStops}
                   style={{
                     width: '100%',
-                    padding: '12px 16px 12px 42px',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-subtle)',
+                    padding: '14px 16px 14px 44px',
+                    background: 'rgba(15, 23, 42, 0.85)',
+                    border: '1px solid rgba(56, 189, 248, 0.4)',
                     borderRadius: 'var(--radius-sm)',
                     color: '#fff',
-                    fontSize: '0.95rem',
+                    fontSize: '1rem',
+                    fontWeight: 600,
                     outline: 'none'
                   }}
                 >
@@ -233,14 +234,38 @@ export default function SearchPage({ mockApiChanged }) {
                     </option>
                   ))}
                 </select>
-                <MapPin size={18} color="#10b981" style={{ position: 'absolute', left: '14px', top: '14px' }} />
+                <MapPin size={20} color="#10b981" style={{ position: 'absolute', left: '14px', top: '15px' }} />
               </div>
+            </div>
+
+            {/* Swap Origin & Destination Button */}
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '-8px 0 8px 0' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const temp = originStopId;
+                  setOriginStopId(destinationStopId);
+                  setDestinationStopId(temp);
+                }}
+                className="btn-secondary"
+                style={{
+                  padding: '6px 16px',
+                  borderRadius: '9999px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  borderColor: 'rgba(59, 130, 246, 0.4)',
+                  color: '#60a5fa'
+                }}
+              >
+                🔄 Swap Origin & Destination
+              </button>
             </div>
 
             {/* Destination Picker */}
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                {t('toLabel').toUpperCase()}
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#f43f5e', marginBottom: '8px', letterSpacing: '0.05em' }}>
+                DESTINATION ARRIVAL STATION
               </label>
               <div style={{ position: 'relative' }}>
                 <select
@@ -249,12 +274,13 @@ export default function SearchPage({ mockApiChanged }) {
                   disabled={loadingStops}
                   style={{
                     width: '100%',
-                    padding: '12px 16px 12px 42px',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-subtle)',
+                    padding: '14px 16px 14px 44px',
+                    background: 'rgba(15, 23, 42, 0.85)',
+                    border: '1px solid rgba(244, 63, 94, 0.4)',
                     borderRadius: 'var(--radius-sm)',
                     color: '#fff',
-                    fontSize: '0.95rem',
+                    fontSize: '1rem',
+                    fontWeight: 600,
                     outline: 'none'
                   }}
                 >
@@ -264,7 +290,7 @@ export default function SearchPage({ mockApiChanged }) {
                     </option>
                   ))}
                 </select>
-                <MapPin size={18} color="#ef4444" style={{ position: 'absolute', left: '14px', top: '14px' }} />
+                <MapPin size={20} color="#ef4444" style={{ position: 'absolute', left: '14px', top: '15px' }} />
               </div>
             </div>
 
