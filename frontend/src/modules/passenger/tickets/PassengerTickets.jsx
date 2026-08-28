@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Ticket, QrCode, AlertTriangle, RefreshCw, CheckCircle2, Clock, Zap, MapPin, Bus, Train, Footprints, ShieldCheck } from 'lucide-react';
+import { Ticket, QrCode, AlertTriangle, RefreshCw, CheckCircle2, Clock, Zap, MapPin, Bus, Train, Footprints, ShieldCheck, Navigation } from 'lucide-react';
 import { api } from '../../../services/api';
 import MapComponent from '../../../components/MapComponent';
-import DynamicQRCode from '../../../components/ticket/DynamicQRCode';
+import LiveJourneyNavPanel from '../../../components/navigation/LiveJourneyNavPanel';
+import { getState, subscribeLocation } from '../../../store/liveLocationStore';
 
 export default function PassengerTickets() {
   const [searchParams] = useSearchParams();
@@ -17,6 +18,14 @@ export default function PassengerTickets() {
   const [loading, setLoading] = useState(true);
   const [simulating, setSimulating] = useState(false);
   const [lastPolled, setLastPolled] = useState(new Date());
+  
+  // Live location state
+  const [navState, setNavState] = useState(getState());
+
+  useEffect(() => {
+    const unsub = subscribeLocation(setNavState);
+    return unsub;
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -157,6 +166,11 @@ export default function PassengerTickets() {
         </div>
       )}
 
+      {/* Live Turn-by-Turn Navigation HUD Panel */}
+      <div style={{ marginBottom: '28px' }}>
+        <LiveJourneyNavPanel journeyOption={displayOption} stops={stops} />
+      </div>
+
       {/* Grid: QR Ticket Card & Timeline on Left, Live Map on Right */}
       <div style={{
         display: 'grid',
@@ -218,40 +232,74 @@ export default function PassengerTickets() {
               </div>
             </div>
 
-            {/* Connected Vertical Timeline */}
+            {/* Connected Vertical Timeline with Live Progress Highlight */}
             <h3 style={{ fontSize: '1.05rem', marginBottom: '16px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Clock size={17} color="#3b82f6" /> Connected Multi-Modal Timeline
             </h3>
 
             <div className="timeline-track">
-              {displayOption.segments.map((seg, idx) => (
-                <div key={idx} className="timeline-step">
-                  <div className="timeline-node" style={{
-                    borderColor: seg.mode === 'metro' ? '#a855f7' : seg.mode === 'bus' ? '#3b82f6' : '#94a3b8'
-                  }} />
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.92rem' }}>
-                        {seg.mode.toUpperCase()} {seg.lineId ? `(${seg.lineId})` : ''}
-                      </span>
-                      <span style={{ fontSize: '0.8rem', color: '#60a5fa', fontWeight: 600 }}>{seg.minutes} mins</span>
+              {displayOption.segments.map((seg, idx) => {
+                const isActiveStep = navState.isTracking && navState.currentSegmentIndex === idx;
+                const isCompletedStep = navState.isTracking && navState.currentSegmentIndex > idx;
+
+                return (
+                  <div key={idx} className="timeline-step">
+                    <div className="timeline-node" style={{
+                      borderColor: isCompletedStep
+                        ? '#10b981'
+                        : isActiveStep
+                        ? '#3b82f6'
+                        : seg.mode === 'metro'
+                        ? '#a855f7'
+                        : seg.mode === 'bus'
+                        ? '#3b82f6'
+                        : '#94a3b8',
+                      background: isCompletedStep ? '#10b981' : '#090d16'
+                    }}>
+                      {isCompletedStep && <CheckCircle2 size={12} color="#fff" />}
                     </div>
-                    <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                      From <strong style={{ color: '#e5e7eb' }}>{getStopName(seg.fromStopId)}</strong> ➔ To <strong style={{ color: '#e5e7eb' }}>{getStopName(seg.toStopId)}</strong>
+                    <div style={{
+                      background: isActiveStep
+                        ? 'rgba(59, 130, 246, 0.15)'
+                        : isCompletedStep
+                        ? 'rgba(16, 185, 129, 0.08)'
+                        : 'rgba(255, 255, 255, 0.03)',
+                      border: isActiveStep
+                        ? '1px solid #3b82f6'
+                        : isCompletedStep
+                        ? '1px solid rgba(16, 185, 129, 0.3)'
+                        : '1px solid rgba(255, 255, 255, 0.08)',
+                      padding: '12px 16px',
+                      borderRadius: '12px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.92rem' }}>
+                          {seg.mode.toUpperCase()} {seg.lineId ? `(${seg.lineId})` : ''}
+                          {isActiveStep && (
+                            <span style={{ marginLeft: '8px', fontSize: '0.72rem', background: '#3b82f6', color: '#fff', padding: '2px 8px', borderRadius: '999px' }}>
+                              ACTIVE NOW 📍
+                            </span>
+                          )}
+                          {isCompletedStep && (
+                            <span style={{ marginLeft: '8px', fontSize: '0.72rem', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '2px 8px', borderRadius: '999px' }}>
+                              COMPLETED ✓
+                            </span>
+                          )}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#60a5fa', fontWeight: 600 }}>{seg.minutes} mins</span>
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
+                        From <strong style={{ color: '#e5e7eb' }}>{getStopName(seg.fromStopId)}</strong> ➔ To <strong style={{ color: '#e5e7eb' }}>{getStopName(seg.toStopId)}</strong>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Right Column: Live Map */}
+        {/* Right Column: Live Map with User GPS Tracking */}
         <div className="glass-panel" style={{ padding: '20px', position: 'sticky', top: '90px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -265,7 +313,16 @@ export default function PassengerTickets() {
             </span>
           </div>
 
-          <MapComponent stops={stops} journeyOption={displayOption} isRerouted={isRerouted} height="480px" />
+          <MapComponent
+            stops={stops}
+            journeyOption={displayOption}
+            isRerouted={isRerouted}
+            height="500px"
+            userLocation={navState.userLocation}
+            isTracking={navState.isTracking}
+            userBreadcrumbs={navState.userBreadcrumbs}
+            isOffRoute={navState.isOffRoute}
+          />
         </div>
       </div>
     </div>

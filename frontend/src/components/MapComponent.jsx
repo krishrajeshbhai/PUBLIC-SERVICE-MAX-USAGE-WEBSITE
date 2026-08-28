@@ -1,11 +1,18 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 // Create custom colored DivIcons for Leaflet markers
-function createCustomIcon(color = '#3b82f6', label = '', isLarge = false) {
-  const size = isLarge ? 28 : 18;
-  const html = `
+function createCustomIcon(color = '#3b82f6', label = '', isLarge = false, isUser = false) {
+  const size = isUser ? 32 : isLarge ? 28 : 18;
+  const html = isUser ? `
+    <div style="position: relative; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center;">
+      <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background: rgba(59, 130, 246, 0.4); animation: pulseGlow 2s infinite;"></div>
+      <div style="width: 18px; height: 18px; border-radius: 50%; background: #3b82f6; border: 3px solid #ffffff; box-shadow: 0 0 14px #3b82f6; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; z-index: 2;">
+        📍
+      </div>
+    </div>
+  ` : `
     <div style="
       background: ${color};
       width: ${size}px;
@@ -39,19 +46,30 @@ const LINE_COLORS = {
   'walk': '#94a3b8'
 };
 
-// Helper component to auto-fit map view to markers/polylines
-function ChangeMapView({ coords }) {
+// Helper component to auto-fit map view to markers/polylines or center on user
+function ChangeMapView({ coords, userLoc, isTracking }) {
   const map = useMap();
   useEffect(() => {
-    if (coords && coords.length > 0) {
+    if (isTracking && userLoc && typeof userLoc.lat === 'number' && typeof userLoc.lng === 'number') {
+      map.setView([userLoc.lat, userLoc.lng], 15, { animate: true });
+    } else if (coords && coords.length > 0) {
       const bounds = L.latLngBounds(coords);
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
     }
-  }, [coords, map]);
+  }, [coords, userLoc, isTracking, map]);
   return null;
 }
 
-export default function MapComponent({ stops = [], journeyOption = null, isRerouted = false, height = '450px' }) {
+export default function MapComponent({
+  stops = [],
+  journeyOption = null,
+  isRerouted = false,
+  height = '450px',
+  userLocation = null,
+  isTracking = false,
+  userBreadcrumbs = [],
+  isOffRoute = false
+}) {
   const defaultCenter = [12.9716, 77.5946]; // Bangalore central default
 
   // Build segments polyline data
@@ -98,7 +116,7 @@ export default function MapComponent({ stops = [], journeyOption = null, isRerou
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {activeCoords.length > 0 && <ChangeMapView coords={activeCoords} />}
+        <ChangeMapView coords={activeCoords} userLoc={userLocation} isTracking={isTracking} />
 
         {/* Render all stop markers */}
         {stops.filter(stop => stop && typeof stop.lat === 'number' && typeof stop.lng === 'number').map((stop) => {
@@ -167,6 +185,54 @@ export default function MapComponent({ stops = [], journeyOption = null, isRerou
             </Popup>
           </Polyline>
         ))}
+
+        {/* User GPS Breadcrumb Trail */}
+        {userBreadcrumbs && userBreadcrumbs.length > 1 && (
+          <Polyline
+            positions={userBreadcrumbs}
+            pathOptions={{
+              color: '#38bdf8',
+              weight: 4,
+              opacity: 0.7,
+              dashArray: '4, 6'
+            }}
+          />
+        )}
+
+        {/* Live User Location GPS Marker with Pulsing Halo */}
+        {userLocation && typeof userLocation.lat === 'number' && typeof userLocation.lng === 'number' && (
+          <>
+            <Circle
+              center={[userLocation.lat, userLocation.lng]}
+              radius={userLocation.accuracy || 20}
+              pathOptions={{
+                color: isOffRoute ? '#ef4444' : '#3b82f6',
+                fillColor: isOffRoute ? '#ef4444' : '#3b82f6',
+                fillOpacity: 0.2,
+                weight: 1
+              }}
+            />
+            <Marker
+              position={[userLocation.lat, userLocation.lng]}
+              icon={createCustomIcon('#3b82f6', '', true, true)}
+              zIndexOffset={1000}
+            >
+              <Popup>
+                <div style={{ padding: '4px' }}>
+                  <div style={{ fontWeight: 800, color: '#38bdf8' }}>📍 Your Live Location</div>
+                  <div style={{ fontSize: '0.8rem', color: '#cbd5e1', marginTop: '2px' }}>
+                    Speed: {userLocation.speed || 0} km/h
+                  </div>
+                  {isOffRoute && (
+                    <div style={{ color: '#f87171', fontWeight: 700, fontSize: '0.78rem', marginTop: '4px' }}>
+                      ⚠️ Off planned route
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          </>
+        )}
       </MapContainer>
     </div>
   );

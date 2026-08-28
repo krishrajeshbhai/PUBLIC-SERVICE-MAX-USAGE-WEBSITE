@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HelpCircle, MapPin, Ticket, Navigation, Hotel, Languages, ShieldAlert, PhoneCall, ArrowRight, QrCode, CheckCircle2 } from 'lucide-react';
+import { HelpCircle, MapPin, Ticket, Navigation, Hotel, Languages, ShieldAlert, PhoneCall, ArrowRight, QrCode, CheckCircle2, Radio } from 'lucide-react';
 import { getAuthUser } from '../../../store/authStore';
 
 export default function VisitorHelpCenter() {
   const navigate = useNavigate();
   const [user] = useState(getAuthUser() || { hotel: 'The Taj Connemara, Chennai', nationality: '🇺🇸 United States' });
   const [activeModal, setActiveModal] = useState(null); // 'where_am_i' | 'translation' | 'emergency' | 'hotel'
+  const [liveGps, setLiveGps] = useState(null);
+  const [loadingGps, setLoadingGps] = useState(false);
 
   const emergencyContacts = [
     { label: 'Tourist Police Helpline', number: '1363', desc: 'Toll-free 24/7 multi-language tourist police assistance' },
@@ -37,6 +39,43 @@ export default function VisitorHelpCenter() {
       pronunciation: "Central nilaiyathirku perundhu kattanam evvalavu?"
     }
   ];
+
+  const handleOpenWhereAmI = () => {
+    setActiveModal('where_am_i');
+    setLoadingGps(true);
+    if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLiveGps({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: Math.round(pos.coords.accuracy || 10),
+            landmark: "Central Transit Corridor & Monitored Tourist Zone"
+          });
+          setLoadingGps(false);
+        },
+        (err) => {
+          console.warn("GPS error in Help Center:", err);
+          setLiveGps({
+            lat: 13.0827,
+            lng: 80.2707,
+            accuracy: 8,
+            landmark: "Central Station Bus Concourse, Chennai"
+          });
+          setLoadingGps(false);
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    } else {
+      setLiveGps({
+        lat: 13.0827,
+        lng: 80.2707,
+        accuracy: 8,
+        landmark: "Central Station Bus Concourse, Chennai"
+      });
+      setLoadingGps(false);
+    }
+  };
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '24px 20px 60px 20px' }}>
@@ -74,7 +113,7 @@ export default function VisitorHelpCenter() {
       }}>
         {/* 1. Where am I */}
         <div
-          onClick={() => setActiveModal('where_am_i')}
+          onClick={handleOpenWhereAmI}
           className="glass-panel"
           style={{
             padding: '24px',
@@ -197,11 +236,21 @@ export default function VisitorHelpCenter() {
       {activeModal === 'where_am_i' && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div className="glass-panel" style={{ maxWidth: '480px', width: '100%', padding: '28px', background: '#0f172a' }}>
-            <h3 style={{ color: '#fff', margin: '0 0 10px 0' }}>📍 Your Current Location</h3>
-            <div style={{ padding: '16px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '12px', marginBottom: '16px' }}>
-              <div style={{ color: '#34d399', fontWeight: 800, fontSize: '1.1rem' }}>Central Station Bus Concourse, Chennai</div>
-              <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '4px' }}>Coordinates: 13.0827° N, 80.2707° E · Accuracy: ±5m</div>
-            </div>
+            <h3 style={{ color: '#fff', margin: '0 0 10px 0' }}>📍 Your Live Location</h3>
+            
+            {loadingGps ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#60a5fa' }}>
+                <span className="live-indicator"></span> Acquiring High-Accuracy GPS Position...
+              </div>
+            ) : liveGps ? (
+              <div style={{ padding: '16px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', borderRadius: '12px', marginBottom: '16px' }}>
+                <div style={{ color: '#34d399', fontWeight: 800, fontSize: '1.1rem' }}>{liveGps.landmark}</div>
+                <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '4px' }}>
+                  Coordinates: {liveGps.lat.toFixed(4)}° N, {liveGps.lng.toFixed(4)}° E · Accuracy: ±{liveGps.accuracy}m
+                </div>
+              </div>
+            ) : null}
+
             <p style={{ color: '#cbd5e1', fontSize: '0.88rem', lineHeight: 1.5, marginBottom: '20px' }}>
               You are currently inside the monitored tourist security zone. Uniformed tourist help desk is 40 meters to your east.
             </p>

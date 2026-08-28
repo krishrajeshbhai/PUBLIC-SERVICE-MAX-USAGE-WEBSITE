@@ -1,19 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Compass, Footprints, Bus, Train, MapPin, QrCode, Volume2, HelpCircle, CheckCircle2, ArrowRight, ArrowLeft, Shield, Map as MapIcon, Languages, Info } from 'lucide-react';
+import {
+  Compass,
+  Footprints,
+  Bus,
+  Train,
+  MapPin,
+  QrCode,
+  Volume2,
+  HelpCircle,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  Shield,
+  Map as MapIcon,
+  Languages,
+  Info,
+  Navigation,
+  Radio,
+  AlertTriangle
+} from 'lucide-react';
 import { TOURIST_DESTINATIONS } from '../explore/VisitorExplore';
 import MapComponent from '../../../components/MapComponent';
+import {
+  getState,
+  subscribeLocation,
+  startLiveLocationTracking,
+  startSimulationPlayback,
+  stopLiveLocationTracking,
+  simulateOffRouteDeviation,
+  recalculateAlternativeRoute,
+  speakNotification
+} from '../../../store/liveLocationStore';
+import { api } from '../../../services/api';
 
 export default function VisitorGuidedJourney() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [currentStepIndex, setCurrentStepIndex] = useState(1); // 0-indexed or 1-indexed (e.g. step 2)
+  const [currentStepIndex, setCurrentStepIndex] = useState(1);
   const [showQR, setShowQR] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [stops, setStops] = useState([]);
+  const [navState, setNavState] = useState(getState());
 
   const dest = TOURIST_DESTINATIONS.find(d => d.id === id) || TOURIST_DESTINATIONS[0];
+
+  useEffect(() => {
+    const unsub = subscribeLocation(setNavState);
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    async function loadStops() {
+      try {
+        const data = await api.getStops();
+        setStops(data);
+      } catch (e) {
+        console.warn("Could not load stops:", e);
+      }
+    }
+    loadStops();
+  }, []);
 
   const steps = [
     {
@@ -75,6 +124,15 @@ export default function VisitorGuidedJourney() {
 
   const currentStep = steps[currentStepIndex] || steps[0];
 
+  const sampleJourneyOption = {
+    id: 'jo-visitor-tour',
+    segments: [
+      { mode: 'walk', fromStopId: 'stop-1', toStopId: 'stop-3', minutes: 5 },
+      { mode: 'bus', lineId: 'line-bus-201', fromStopId: 'stop-3', toStopId: 'stop-4', minutes: 25 },
+      { mode: 'metro', lineId: 'line-purple', fromStopId: 'stop-4', toStopId: 'stop-2', minutes: 15 }
+    ]
+  };
+
   const handleAudio = () => {
     if ('speechSynthesis' in window) {
       if (speaking) {
@@ -105,10 +163,18 @@ export default function VisitorGuidedJourney() {
     }
   };
 
+  const toggleLiveTracking = () => {
+    if (navState.isTracking) {
+      stopLiveLocationTracking();
+    } else {
+      startLiveLocationTracking(sampleJourneyOption, stops);
+    }
+  };
+
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 20px 60px 20px' }}>
-      {/* Top Breadcrumb */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div style={{ maxWidth: '960px', margin: '0 auto', padding: '24px 20px 60px 20px' }}>
+      {/* Top Breadcrumb & Live GPS Trigger */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
         <button
           onClick={() => navigate(`/visitor/destination/${id}`)}
           style={{
@@ -126,10 +192,67 @@ export default function VisitorGuidedJourney() {
           <ArrowLeft size={16} /> Destination Details
         </button>
 
-        <span className="badge" style={{ background: '#10b981', color: '#000', fontWeight: 800 }}>
-          🟢 GUIDED TRAVEL ACTIVE
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={toggleLiveTracking}
+            style={{
+              background: navState.isTracking ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+              border: `1px solid ${navState.isTracking ? '#10b981' : '#f59e0b'}`,
+              color: navState.isTracking ? '#34d399' : '#fbbf24',
+              padding: '6px 14px',
+              borderRadius: '999px',
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <Radio size={14} className={navState.isTracking ? 'live-indicator' : ''} />
+            <span>{navState.isTracking ? 'GPS TRACKING ACTIVE 📍' : 'ACTIVATE LIVE GPS'}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Off-Route Alert if Deviated */}
+      {navState.isOffRoute && (
+        <div style={{
+          padding: '14px 18px',
+          background: 'rgba(239, 68, 68, 0.2)',
+          border: '1px solid #ef4444',
+          borderRadius: '14px',
+          color: '#fca5a5',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <AlertTriangle size={20} color="#ef4444" />
+            <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>
+              Tourist Safety Alert: You are {navState.deviationDistanceMeters}m away from the guided route.
+            </span>
+          </div>
+          <button
+            onClick={() => recalculateAlternativeRoute()}
+            style={{
+              background: '#ef4444',
+              color: '#fff',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              fontWeight: 700,
+              fontSize: '0.8rem',
+              cursor: 'pointer'
+            }}
+          >
+            Guide Me Back
+          </button>
+        </div>
+      )}
 
       {/* Main Guided Step Card */}
       <div className="glass-panel" style={{
@@ -218,12 +341,18 @@ export default function VisitorGuidedJourney() {
           marginBottom: '24px'
         }}>
           <div>
-            <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>DISTANCE</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: '2px' }}>{currentStep.distance}</div>
+            <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>DISTANCE TO NEXT STOP</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginTop: '2px' }}>
+              {navState.isTracking && navState.remainingDistanceMeters > 0
+                ? `${navState.remainingDistanceMeters} meters`
+                : currentStep.distance}
+            </div>
           </div>
           <div>
             <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>ESTIMATED TIME</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#34d399', marginTop: '2px' }}>{currentStep.estimated}</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#34d399', marginTop: '2px' }}>
+              {navState.isTracking ? `${navState.remainingDurationMinutes} min` : currentStep.estimated}
+            </div>
           </div>
         </div>
 
@@ -253,7 +382,7 @@ export default function VisitorGuidedJourney() {
           </div>
         </div>
 
-        {/* Explain This Step Accordion */}
+        {/* Plain English Explanation */}
         <div style={{ marginBottom: '28px' }}>
           <button
             onClick={() => setShowExplanation(!showExplanation)}
@@ -327,6 +456,22 @@ export default function VisitorGuidedJourney() {
             {currentStepIndex === steps.length - 1 ? 'Destination Reached 🎉' : 'I Am Here ➔ Next Step'} <ArrowRight size={18} />
           </button>
         </div>
+      </div>
+
+      {/* Live Map Preview with User GPS Marker */}
+      <div className="glass-panel" style={{ padding: '20px' }}>
+        <h3 style={{ fontSize: '1.1rem', color: '#fff', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <MapIcon size={18} color="#fbbf24" /> Live Step Navigation Map
+        </h3>
+        <MapComponent
+          stops={stops}
+          journeyOption={sampleJourneyOption}
+          height="380px"
+          userLocation={navState.userLocation}
+          isTracking={navState.isTracking}
+          userBreadcrumbs={navState.userBreadcrumbs}
+          isOffRoute={navState.isOffRoute}
+        />
       </div>
 
       {/* QR Modal */}

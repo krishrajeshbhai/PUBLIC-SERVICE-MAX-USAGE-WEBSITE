@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { MapPin, Navigation, Clock, Zap, ArrowRight, Sparkles, Footprints, Shield, Bus, Train, Leaf, Flame, Search } from 'lucide-react';
+import { MapPin, Navigation, Clock, Zap, ArrowRight, Sparkles, Footprints, Shield, Bus, Train, Leaf, Flame, Search, Radio, CheckCircle2 } from 'lucide-react';
 import { getAuthUser } from '../../../store/authStore';
 import { api } from '../../../services/api';
 import MapComponent from '../../../components/MapComponent';
+import LocationPromptModal from '../../../components/location/LocationPromptModal';
+import { getState, subscribeLocation, startLiveLocationTracking } from '../../../store/liveLocationStore';
 
 export default function PassengerHome() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getAuthUser() || { name: 'Abhiraj', id: 'user-1' });
   const [stops, setStops] = useState([]);
   const [searchDestination, setSearchDestination] = useState('');
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [liveLocationData, setLiveLocationData] = useState(null);
+  const [navState, setNavState] = useState(getState());
+
+  useEffect(() => {
+    const unsub = subscribeLocation(setNavState);
+    return unsub;
+  }, []);
 
   useEffect(() => {
     async function loadStops() {
@@ -33,8 +43,13 @@ export default function PassengerHome() {
   };
 
   const handleStartUsualJourney = () => {
-    // Quick book/view usual route: stop-1 (Central Station / Home) -> stop-2 (Tech Park / College)
     navigate('/passenger/results?origin=stop-1&destination=stop-2');
+  };
+
+  const handleLocationAcquired = (loc) => {
+    setLiveLocationData(loc);
+    // Start tracking in store with current stops
+    startLiveLocationTracking(null, stops);
   };
 
   const recentDestinations = [
@@ -46,18 +61,63 @@ export default function PassengerHome() {
 
   return (
     <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '24px 20px 48px 20px' }}>
-      {/* Greeting Header */}
-      <div style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#60a5fa', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-          Location: Bengaluru Central Transit Hub
+      {/* Location Modal */}
+      <LocationPromptModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        onLocationAcquired={handleLocationAcquired}
+        stops={stops}
+      />
+
+      {/* Greeting Header & Live Location Request Bar */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '16px',
+        marginBottom: '28px'
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#60a5fa', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
+            {liveLocationData ? (
+              <span style={{ color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CheckCircle2 size={15} /> GPS Synced: {liveLocationData.nearestStop.name} (±{liveLocationData.accuracy}m)
+              </span>
+            ) : (
+              <span>Location: Bengaluru Central Transit Hub</span>
+            )}
+          </div>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
+            Good Morning, {user.name} 👋
+          </h1>
+          <p style={{ color: '#94a3b8', fontSize: '1rem', marginTop: '6px' }}>
+            Ready for your commute? All bus & metro lines running on regular schedule.
+          </p>
         </div>
-        <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-          Good Morning, {user.name} 👋
-        </h1>
-        <p style={{ color: '#94a3b8', fontSize: '1rem', marginTop: '6px' }}>
-          Ready for your commute? All bus & metro lines running on regular schedule.
-        </p>
+
+        {/* Ask Location / Live Location Button */}
+        <button
+          onClick={() => setIsLocationModalOpen(true)}
+          style={{
+            background: liveLocationData ? 'rgba(16, 185, 129, 0.15)' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            border: liveLocationData ? '1px solid #10b981' : 'none',
+            color: liveLocationData ? '#34d399' : '#ffffff',
+            padding: '12px 20px',
+            borderRadius: '14px',
+            fontSize: '0.92rem',
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            boxShadow: liveLocationData ? 'none' : '0 4px 16px rgba(59, 130, 246, 0.4)'
+          }}
+        >
+          <Navigation size={18} />
+          {liveLocationData ? '📍 Live Location Active' : '📍 Ask & Show My Live Location'}
+        </button>
       </div>
 
       {/* Main Grid: Commute Search & Usual Journey on Left, Map & Stats on Right */}
@@ -108,13 +168,22 @@ export default function PassengerHome() {
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              justifyContent: 'space-between',
               marginTop: '12px',
               fontSize: '0.8rem',
               color: '#94a3b8'
             }}>
-              <MapPin size={14} color="#10b981" />
-              <span>Current: <strong>Central Station (stop-1)</strong></span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <MapPin size={14} color="#10b981" />
+                <span>Origin: <strong>{liveLocationData ? liveLocationData.nearestStop.name : 'Central Station (stop-1)'}</strong></span>
+              </div>
+
+              <button
+                onClick={() => setIsLocationModalOpen(true)}
+                style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', fontWeight: 700 }}
+              >
+                Change ➔
+              </button>
             </div>
           </div>
 
@@ -242,14 +311,26 @@ export default function PassengerHome() {
             </div>
           </div>
 
-          {/* Interactive Transit Map */}
+          {/* Interactive Transit Map with Live User GPS Marker */}
           <div className="glass-panel" style={{ padding: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#fff' }}>City Transit Grid</h3>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{stops.length} Active Stops</span>
+              {liveLocationData ? (
+                <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#34d399' }}>
+                  📍 GPS ACTIVE
+                </span>
+              ) : (
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{stops.length} Active Stops</span>
+              )}
             </div>
 
-            <MapComponent stops={stops} height="400px" />
+            <MapComponent
+              stops={stops}
+              height="400px"
+              userLocation={navState.userLocation}
+              isTracking={navState.isTracking || !!liveLocationData}
+              userBreadcrumbs={navState.userBreadcrumbs}
+            />
 
             <div style={{
               display: 'flex',

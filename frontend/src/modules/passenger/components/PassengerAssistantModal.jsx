@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, X, Send, Sparkles, Navigation, Clock, CreditCard, RefreshCw } from 'lucide-react';
+import { Mic, X, Send, Sparkles, Navigation, Clock, CreditCard, RefreshCw, MapPin } from 'lucide-react';
 import { api } from '../../../services/api';
+import { getAssistantLocationContext } from '../../../store/liveLocationStore';
 
 export default function PassengerAssistantModal({ onClose }) {
   const navigate = useNavigate();
@@ -14,12 +15,14 @@ export default function PassengerAssistantModal({ onClose }) {
   ]);
   const [isListening, setIsListening] = useState(false);
 
+  const locContext = getAssistantLocationContext();
+
   const quickPrompts = [
+    { label: '📍 Where am I right now?', query: 'Where am I right now?', action: () => {} },
     { label: '🚌 Find a bus to college', query: 'Find a bus to college', action: () => navigate('/passenger/search?origin=stop-1&destination=stop-2') },
     { label: '⚡ Book my usual journey', query: 'Book my usual journey', action: () => navigate('/passenger/results?origin=stop-1&destination=stop-2') },
     { label: '🎫 Show my active ticket', query: 'Show my active ticket', action: () => navigate('/passenger/tickets') },
-    { label: '💳 How much is in my wallet?', query: 'How much is in my wallet?', action: () => navigate('/passenger/wallet') },
-    { label: '🔄 Find another route', query: 'Find another route', action: () => navigate('/passenger/search') }
+    { label: '💳 How much is in my wallet?', query: 'How much is in my wallet?', action: () => navigate('/passenger/wallet') }
   ];
 
   const handleSend = (text) => {
@@ -30,12 +33,23 @@ export default function PassengerAssistantModal({ onClose }) {
     setMessages(newMsgs);
     setQuery('');
 
-    // AI Response logic
+    // AI Location Context Aware Response logic
     setTimeout(() => {
       const lower = userText.toLowerCase();
-      let reply = "I've checked the network. Would you like to search routes or view your tickets?";
+      const currentLoc = getAssistantLocationContext();
+      let reply = "I've checked your live transit status.";
 
-      if (lower.includes('college') || lower.includes('bus') || lower.includes('route')) {
+      if (lower.includes('where am i') || lower.includes('location') || lower.includes('position')) {
+        if (currentLoc.isTracking) {
+          reply = `📍 You are currently near ${currentLoc.nearestStop} traveling at ${currentLoc.speed} km/h. Remaining distance to your destination is ${
+            currentLoc.remainingDistance > 1000
+              ? `${(currentLoc.remainingDistance / 1000).toFixed(1)} km`
+              : `${currentLoc.remainingDistance} m`
+          } (ETA: ~${currentLoc.remainingMinutes} mins).`;
+        } else {
+          reply = "📍 You are currently at Central Station Concourse (Lat: 12.9716, Lng: 77.5946). Start live GPS navigation on your ticket screen for continuous turn-by-turn guidance!";
+        }
+      } else if (lower.includes('college') || lower.includes('bus') || lower.includes('route')) {
         reply = "Found Bus 201 and Purple Line Metro to College. Transfer at MG Road (42 min, ₹28). Opening journey options now!";
         setTimeout(() => {
           onClose();
@@ -53,17 +67,23 @@ export default function PassengerAssistantModal({ onClose }) {
           onClose();
           navigate('/passenger/wallet');
         }, 1000);
+      } else if (lower.includes('step') || lower.includes('next') || lower.includes('far')) {
+        if (currentLoc.isTracking) {
+          reply = `Current navigation step: ${currentLoc.currentStepText}. You are approximately ${currentLoc.remainingDistance}m from your destination.`;
+        } else {
+          reply = "Step 1: Walk to Bus Stop (120m). Step 2: Board Bus 201 to MG Road.";
+        }
       }
 
       setMessages(prev => [...prev, { sender: 'ai', text: reply }]);
-    }, 600);
+    }, 500);
   };
 
   const toggleMic = () => {
     setIsListening(prev => !prev);
     if (!isListening) {
       setTimeout(() => {
-        handleSend("Find a bus to college");
+        handleSend("Where am I right now?");
         setIsListening(false);
       }, 2000);
     }
@@ -112,7 +132,9 @@ export default function PassengerAssistantModal({ onClose }) {
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#fff' }}>Commuter AI Assistant</h3>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Real-time voice & text commute intelligence</span>
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                {locContext.isTracking ? `📍 Live GPS Synced (${locContext.nearestStop})` : 'Real-time voice & text commute intelligence'}
+              </span>
             </div>
           </div>
           <button
@@ -172,7 +194,7 @@ export default function PassengerAssistantModal({ onClose }) {
               gap: '8px'
             }}>
               <span className="live-indicator" style={{ width: 8, height: 8 }}></span>
-              Listening to your voice... (say "Find a bus to college")
+              Listening to your voice... (say "Where am I right now?")
             </div>
           )}
         </div>

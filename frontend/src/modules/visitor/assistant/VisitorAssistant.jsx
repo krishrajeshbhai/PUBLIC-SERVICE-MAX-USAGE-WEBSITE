@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, Mic, Send, Sparkles, Compass, MapPin, Globe, Volume2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { getAssistantLocationContext } from '../../../store/liveLocationStore';
 
 export default function VisitorAssistant() {
   const navigate = useNavigate();
@@ -13,12 +14,14 @@ export default function VisitorAssistant() {
     }
   ]);
 
+  const locContext = getAssistantLocationContext();
+
   const travelPrompts = [
+    { label: '📍 Where am I right now?', query: 'Where am I right now?' },
     { label: '✈️ How do I get to the Airport?', query: 'How do I get to Chennai International Airport?' },
     { label: '🧭 What should I explore now?', query: 'What are the top attractions near me today?' },
     { label: '🏨 Take me to my hotel', query: 'How do I get back to The Taj Connemara Hotel?' },
-    { label: '🗣 Translate: Where is the bus?', query: 'Translate "Where is the bus to Mahabalipuram?" to Tamil' },
-    { label: '🎫 Show my travel pass', query: 'Show my active tourist pass' }
+    { label: '🗣 Translate: Where is the bus?', query: 'Translate "Where is the bus to Mahabalipuram?" to Tamil' }
   ];
 
   const handleSend = (text) => {
@@ -29,12 +32,23 @@ export default function VisitorAssistant() {
     setMessages(newMsgs);
     setQuery('');
 
-    // Travel Guide AI Persona responses
+    // Travel Guide AI Persona responses with Live GPS Location context
     setTimeout(() => {
       const lower = userText.toLowerCase();
+      const currentLoc = getAssistantLocationContext();
       let reply = "I am checking the official tourist transit network for you...";
 
-      if (lower.includes('airport')) {
+      if (lower.includes('where am i') || lower.includes('location') || lower.includes('position')) {
+        if (currentLoc.isTracking) {
+          reply = `📍 You are currently near ${currentLoc.nearestStop} (Lat: ${currentLoc.latitude.toFixed(4)}, Lng: ${currentLoc.longitude.toFixed(4)}). You are traveling at ${currentLoc.speed} km/h. Remaining distance to monument/stop: ${
+            currentLoc.remainingDistance > 1000
+              ? `${(currentLoc.remainingDistance / 1000).toFixed(1)} km`
+              : `${currentLoc.remainingDistance} m`
+          } (~${currentLoc.remainingMinutes} mins away).`;
+        } else {
+          reply = "📍 You are currently near Central Station Concourse in Chennai. You are inside the monitored tourist security zone. Uniformed tourist help desks are nearby!";
+        }
+      } else if (lower.includes('airport')) {
         reply = "To reach Chennai International Airport (MAA): Take the Metro Blue Line direct to Chennai Airport Metro Station (24 mins, ₹40). Elevators connect directly to Terminal 2 Departures!";
       } else if (lower.includes('explore') || lower.includes('attraction')) {
         reply = "I recommend visiting the 7th-century UNESCO Shore Temple at Mahabalipuram! Take Bus 588 Express from Thiruvanmiyur (1h 45m). Would you like me to open the guided journey?";
@@ -47,14 +61,14 @@ export default function VisitorAssistant() {
       }
 
       setMessages(prev => [...prev, { sender: 'ai', text: reply }]);
-    }, 600);
+    }, 500);
   };
 
   const toggleMic = () => {
     setIsListening(!isListening);
     if (!isListening) {
       setTimeout(() => {
-        handleSend("How do I get to Chennai International Airport?");
+        handleSend("Where am I right now?");
         setIsListening(false);
       }, 2000);
     }
@@ -83,7 +97,7 @@ export default function VisitorAssistant() {
           Travel Guide Assistant
         </h1>
         <p style={{ color: '#94a3b8', fontSize: '1rem', marginTop: '4px' }}>
-          Ask directions, monument history, local customs, transit tips, and driver translations.
+          {locContext.isTracking ? `📍 Synced with Live GPS · Nearest Landmark: ${locContext.nearestStop}` : 'Ask directions, monument history, local customs, transit tips, and driver translations.'}
         </p>
       </div>
 
@@ -142,7 +156,7 @@ export default function VisitorAssistant() {
               gap: '8px'
             }}>
               <span className="live-indicator" style={{ width: 8, height: 8, background: '#f59e0b' }}></span>
-              Listening to your travel question...
+              Listening to your travel question... (say "Where am I right now?")
             </div>
           )}
         </div>
