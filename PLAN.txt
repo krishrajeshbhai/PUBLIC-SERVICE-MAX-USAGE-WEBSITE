@@ -1,0 +1,1360 @@
+# TransitOne UI Restructuring — Three Separate User Modules
+
+I want you to redesign and restructure the TransitOne frontend. The current design incorrectly combines Passenger App, Visitor Experience, and Employee Portal into one connected UI experience.
+
+Instead, create **three clearly separate application modules** with separate authentication, onboarding, navigation, layouts, dashboards, user flows, and visual experiences.
+
+Do not create one combined homepage where users are simply redirected based on their role.
+
+The product should behave like **three different applications inside one TransitOne ecosystem**.
+
+---
+
+## Core Architecture
+
+```text
+                        TRANSITONE ECOSYSTEM
+                                │
+          ┌─────────────────────┼─────────────────────┐
+          │                     │                     │
+          ▼                     ▼                     ▼
+    PASSENGER APP        VISITOR EXPERIENCE      EMPLOYEE PORTAL
+          │                     │                     │
+    Passenger Users       International Visitors    Staff & Operators
+          │                     │                     │
+          ▼                     ▼                     ▼
+   Passenger UI System      Visitor UI System      Operations UI System
+          │                     │                     │
+          └─────────────────────┼─────────────────────┘
+                                ▼
+                        SHARED BACKEND APIs
+                                │
+                        SHARED DESIGN TOKENS
+                                │
+                           TRANSITONE
+```
+
+These are three separate modules.
+
+The UI must not feel like:
+
+```text
+One application
++
+Different menus
+```
+
+It should feel like:
+
+```text
+One TransitOne platform
+↓
+Three different products
+↓
+Three different user experiences
+```
+
+---
+
+# MODULE 1 — PASSENGER APP
+
+## User
+
+Regular Indian commuters and domestic users.
+
+## Authentication
+
+Create a dedicated Passenger Authentication flow.
+
+```text
+PASSENGER APP
+
+Welcome to TransitOne
+
+[ Continue with Phone ]
+[ Continue with Google ]
+[ Continue with Email ]
+
+Already have an account?
+[ Login ]
+```
+
+Primary authentication:
+
+```text
+Mobile Number
+↓
+OTP Verification
+↓
+Passenger Account
+↓
+Passenger Home
+```
+
+Do not show Employee Login inside this authentication interface.
+
+Do not mix visitor onboarding with passenger registration.
+
+The Passenger App should be a dedicated consumer product.
+
+---
+
+## Passenger UI Style
+
+The Passenger App should be:
+
+* Mobile-first
+* Fast
+* Modern
+* Familiar
+* Practical
+* Minimal
+* High utility
+* Personalized
+
+The main question is:
+
+> Where do you want to go?
+
+The passenger should not need to understand:
+
+* Bus operators
+* Railway systems
+* Multiple transport providers
+* Complex transport routes
+
+TransitOne handles that complexity.
+
+---
+
+## Passenger Navigation
+
+Mobile:
+
+```text
+┌────────────────────────────┐
+│                            │
+│        PAGE CONTENT        │
+│                            │
+├────────────────────────────┤
+│ Home | Search | Trips | 👤 │
+└────────────────────────────┘
+```
+
+Desktop/tablet can use:
+
+```text
+Sidebar
+
+Home
+Plan Journey
+My Trips
+Tickets
+Wallet
+Rewards
+Profile
+```
+
+---
+
+## Passenger Dashboard
+
+```text
+Good Morning, Abhiraj 👋
+
+Where do you want to go?
+
+[ Search destination               ]
+
+📍 Current Location
+
+────────────────────────
+
+Recent
+
+🏠 Home
+🎓 College
+💼 Office
+
+────────────────────────
+
+YOUR USUAL JOURNEY
+
+Home → College
+
+42 min
+₹28
+
+[ Start Journey ]
+```
+
+---
+
+## Passenger Features
+
+The Passenger Module includes:
+
+### 1. Journey Search
+
+```text
+Where do you want to go?
+
+[ Search destination ]
+
+Recent locations
+Saved places
+Popular destinations
+```
+
+### 2. Journey Planning
+
+```text
+From
+Current Location
+
+To
+Destination
+
+When
+Leave now
+
+Preferences
+
+Fastest
+Cheapest
+Least walking
+Accessible
+
+[ Find Routes ]
+```
+
+### 3. Journey Results
+
+```text
+BEST OPTIONS
+
+⚡ Fastest
+42 min • ₹32
+
+💰 Cheapest
+51 min • ₹18
+
+🚶 Least Walking
+45 min • ₹28
+```
+
+### 4. Booking
+
+```text
+Journey
+↓
+Review
+↓
+Payment
+↓
+Confirmation
+↓
+Ticket
+```
+
+### 5. Tickets
+
+```text
+Active Ticket
+
+HOME → COLLEGE
+
+Bus + Metro
+
+████████████
+QR CODE
+
+Status: ACTIVE
+```
+
+### 6. Live Journey
+
+```text
+LIVE JOURNEY
+
+● Home
+│
+✓ Completed
+│
+● Bus 42A
+│
+✓ Completed
+│
+● Metro Blue
+│
+🟢 On Time
+│
+○ College
+```
+
+### 7. Wallet
+
+```text
+₹482.00
+
+Available Balance
+
+[ Add Money ]
+
+Recent Transactions
+```
+
+### 8. Trips
+
+```text
+Upcoming
+Active
+Completed
+Cancelled
+```
+
+### 9. Profile
+
+```text
+Personal Information
+Travel Preferences
+Accessibility
+Notifications
+Language
+Privacy
+```
+
+---
+
+# MODULE 2 — VISITOR EXPERIENCE
+
+## User
+
+International tourists and visitors who may not understand:
+
+* Indian public transport
+* Local languages
+* Transport terminology
+* Station systems
+* Ticketing systems
+* Currency and local routes
+
+This must **not look like the Passenger App**.
+
+The Visitor Experience should feel like a travel companion and guide.
+
+---
+
+## Visitor Authentication
+
+Create a separate Visitor onboarding and authentication flow.
+
+```text
+WELCOME TO INDIA 🇮🇳
+
+Your personal travel companion.
+
+[ Get Started ]
+
+Already have an account?
+[ Sign In ]
+```
+
+Authentication options:
+
+```text
+Continue with Google
+Continue with Apple
+Continue with Email
+Guest / Quick Explore
+```
+
+Then:
+
+```text
+Nationality
+↓
+Preferred Language
+↓
+Travel Duration
+↓
+Accommodation / Hotel
+↓
+Travel Preferences
+↓
+Visitor Dashboard
+```
+
+Do not force visitors through the same commuter onboarding as passengers.
+
+---
+
+## Visitor UI Style
+
+The Visitor Experience should be:
+
+* Friendly
+* Visual
+* Reassuring
+* International
+* Spacious
+* Less dense
+* Map-oriented
+* Illustration-supported
+* Travel-focused
+* Easy to understand
+
+The design should answer:
+
+> I am in a new country. Help me get where I want to go safely and easily.
+
+---
+
+## Visitor Navigation
+
+Use a different navigation structure:
+
+```text
+Explore
+My Journey
+Map
+Assistant
+Profile
+```
+
+The home screen should prioritize exploration rather than daily commuting.
+
+---
+
+## Visitor Home
+
+```text
+WELCOME TO INDIA 🇮🇳
+
+What would you like to explore?
+
+[ Search places ]
+
+────────────────────
+
+Explore India
+
+🏛 Culture & History
+🏖 Beaches
+🍛 Food
+🛕 Temples
+🏔 Nature
+🛍 Shopping
+
+────────────────────
+
+Your Current Trip
+
+Explore Chennai
+3 days remaining
+```
+
+---
+
+## Visitor Features
+
+### 1. Explore Destinations
+
+```text
+Explore nearby places
+
+Popular
+Culture
+Food
+Nature
+Shopping
+```
+
+### 2. Tourist Destination Page
+
+```text
+MAHABALIPURAM
+
+🏛 UNESCO Heritage Site
+
+[ About ]
+[ How to Get There ]
+[ Nearby Places ]
+
+Recommended Journey
+
+🚌 Public Transport
+1h 45m
+₹120
+
+[ Start Journey ]
+```
+
+### 3. Guided Journey
+
+```text
+STEP 2 OF 5
+
+🚶 WALK TO BUS STOP
+
+Distance
+350m
+
+Estimated
+5 minutes
+
+Look for
+Bus Stop Sign
+
+[ Show Map ]
+
+[ I Am Here ]
+```
+
+Next:
+
+```text
+STEP 3 OF 5
+
+🚌 BOARD BUS
+
+Bus Number
+42A
+
+Direction
+Mahabalipuram
+
+Your ticket
+
+[ Show QR ]
+```
+
+### 4. Explain My Journey
+
+Every journey should have:
+
+```text
+[ Explain This Step ]
+```
+
+Example:
+
+> Walk to the bus stop outside the station. The sign may be written in Tamil. Show this screen to staff if you need help.
+
+### 5. Language Assistance
+
+The Visitor module should support:
+
+```text
+English
+French
+German
+Spanish
+Japanese
+Korean
+Hindi
+Tamil
+Telugu
+```
+
+The selected language should change:
+
+* Interface
+* Instructions
+* Voice assistant language
+* Journey explanations
+
+### 6. Offline Journey
+
+```text
+Your journey is downloaded.
+
+✓ Ticket available
+✓ Journey steps available
+✓ Essential map available
+✓ Emergency information available
+```
+
+### 7. Visitor Assistance
+
+Persistent Help Center:
+
+```text
+Need Help?
+
+📍 Where am I?
+🎫 Show My Ticket
+🚉 Find Station
+🏨 Find My Hotel
+🗣 Translation
+🆘 Emergency
+```
+
+---
+
+# MODULE 3 — EMPLOYEE PORTAL
+
+## User
+
+Transport employees, operators, administrators, and operations staff.
+
+This should be a professional operations platform.
+
+It must not use:
+
+* Bottom navigation
+* Passenger cards
+* Tourist illustrations
+* Consumer-style layouts
+
+---
+
+## Employee Authentication
+
+Completely separate authentication.
+
+Create:
+
+```text
+TRANSITONE OPERATIONS
+
+Secure Employee Access
+
+[ Employee ID / Email ]
+
+[ Password ]
+
+[ Sign In ]
+
+Forgot Password?
+```
+
+Then:
+
+```text
+Optional 2FA
+↓
+Role Validation
+↓
+Permission Check
+↓
+Employee Dashboard
+```
+
+Possible roles:
+
+```text
+Operator
+Route Manager
+Incident Manager
+Administrator
+Support Staff
+Supervisor
+```
+
+The backend determines permissions.
+
+The UI must adapt according to role.
+
+---
+
+## Employee UI Style
+
+The Employee Portal should feel like:
+
+* Professional
+* Data-dense
+* Operational
+* Dashboard-oriented
+* Desktop-first
+* Serious
+* Fast to scan
+* Suitable for long work sessions
+
+Use:
+
+```text
+Sidebar
+Top bar
+Data tables
+Maps
+Filters
+Status badges
+Charts
+Activity panels
+```
+
+---
+
+## Employee Dashboard
+
+```text
+OPERATIONS OVERVIEW
+
+Active Vehicles       1,482
+Delayed                  23
+Cancelled                 4
+Critical Incidents        2
+
+────────────────────────
+
+LIVE NETWORK
+
+🟢 Normal        92%
+🟡 Delayed        7%
+🔴 Critical       1%
+
+────────────────────────
+
+[ Live Network Map ]
+```
+
+---
+
+## Employee Navigation
+
+```text
+TransitOne Operations
+
+Overview
+
+Operations
+├── Live Network
+├── Routes
+├── Vehicles
+└── Stations
+
+Management
+├── Employees
+├── Operators
+└── Service Alerts
+
+Incidents
+├── Active
+├── Investigation
+└── Resolved
+
+Analytics
+├── Performance
+├── Reports
+└── History
+
+Settings
+```
+
+The exact navigation should be controlled by employee role permissions.
+
+---
+
+## Employee Features
+
+### 1. Operations Dashboard
+
+```text
+Network Status
+Live Vehicles
+Delayed Routes
+Critical Incidents
+Passenger Impact
+```
+
+### 2. Live Network
+
+Map showing:
+
+```text
+Vehicle locations
+Routes
+Stations
+Alerts
+Incidents
+Affected areas
+```
+
+### 3. Vehicle Management
+
+```text
+Vehicle ID | Route | Driver | Status | Location
+
+BUS-421    | 42A   | Assigned | Active
+BUS-422    | 42A   | Assigned | Delayed
+```
+
+### 4. Incident Management
+
+```text
+INCIDENT #INC-8291
+
+Signal Failure
+
+Status
+INVESTIGATING
+
+Affected
+Blue Line
+
+Passengers Affected
+1,824
+
+[ Update Status ]
+[ Notify Passengers ]
+[ Create Alternative ]
+[ Resolve Incident ]
+```
+
+### 5. Service Alerts
+
+```text
+CREATE SERVICE ALERT
+
+Operator
+[ Metro ]
+
+Route
+[ Blue Line ]
+
+Severity
+[ Medium ]
+
+Issue
+[ Signal Failure ]
+
+Expected Delay
+[ 15 Minutes ]
+
+[ Preview ]
+[ Publish Alert ]
+```
+
+After publishing:
+
+```text
+Employee
+↓
+Backend
+↓
+Affected Journeys
+↓
+Passenger Notification
+↓
+Rerouting
+```
+
+### 6. Reports
+
+```text
+Daily Performance
+Weekly Performance
+Route Performance
+Delay Analysis
+Incident Reports
+```
+
+---
+
+# THREE SEPARATE ROUTE STRUCTURES
+
+Create completely separated route trees.
+
+```text
+/passenger
+/passenger/login
+/passenger/register
+/passenger/home
+/passenger/search
+/passenger/journeys
+/passenger/trips
+/passenger/tickets
+/passenger/wallet
+/passenger/profile
+```
+
+```text
+/visitor
+/visitor/welcome
+/visitor/login
+/visitor/onboarding
+/visitor/explore
+/visitor/destination/:id
+/visitor/journey/:id
+/visitor/assistant
+/visitor/help
+/visitor/profile
+```
+
+```text
+/employee
+/employee/login
+/employee/dashboard
+/employee/network
+/employee/routes
+/employee/vehicles
+/employee/incidents
+/employee/alerts
+/employee/reports
+/employee/settings
+```
+
+Do not create one universal layout for all these routes.
+
+---
+
+# THREE SEPARATE APPLICATION SHELLS
+
+Create:
+
+```text
+src/modules/
+
+├── passenger/
+│   ├── PassengerShell
+│   ├── passenger.routes
+│   ├── auth
+│   ├── home
+│   ├── journey
+│   ├── booking
+│   ├── tickets
+│   ├── wallet
+│   └── profile
+│
+├── visitor/
+│   ├── VisitorShell
+│   ├── visitor.routes
+│   ├── auth
+│   ├── onboarding
+│   ├── explore
+│   ├── guidedJourney
+│   ├── language
+│   ├── assistance
+│   └── profile
+│
+├── employee/
+│   ├── EmployeeShell
+│   ├── employee.routes
+│   ├── auth
+│   ├── dashboard
+│   ├── network
+│   ├── vehicles
+│   ├── incidents
+│   ├── alerts
+│   └── reports
+```
+
+Shared resources:
+
+```text
+src/shared/
+
+├── api
+├── auth
+├── components
+├── hooks
+├── utils
+├── types
+└── design-tokens
+```
+
+Business logic and APIs can be shared, but the UI must remain independent.
+
+---
+
+# THREE SEPARATE AUTHENTICATION MODULES
+
+Do not create one generic login page.
+
+Create:
+
+```text
+PassengerAuth
+VisitorAuth
+EmployeeAuth
+```
+
+Authentication architecture:
+
+```text
+PASSENGER
+
+Phone / OTP
+Google
+Email
+
+↓
+
+PASSENGER ROLE
+
+↓
+
+PassengerShell
+```
+
+```text
+VISITOR
+
+Google
+Apple
+Email
+Guest Explore
+
+↓
+
+Visitor Onboarding
+
+↓
+
+VisitorShell
+```
+
+```text
+EMPLOYEE
+
+Employee ID / Email
+Password
+2FA
+
+↓
+
+Role Verification
+
+↓
+
+EmployeeShell
+```
+
+---
+
+# VOICE ASSISTANT INTEGRATION
+
+The TransitOne assistant should be integrated differently depending on the user module.
+
+## Passenger
+
+Primary tasks:
+
+```text
+"Find a bus to college."
+
+"Book my usual journey."
+
+"Where is my bus?"
+
+"Show my ticket."
+
+"How much money is in my wallet?"
+
+"Find another route."
+```
+
+Use:
+
+```text
+Floating Assistant Button
+↓
+Voice / Text
+↓
+Task Confirmation
+↓
+Execute
+↓
+Navigate to relevant screen
+```
+
+---
+
+## Visitor
+
+The assistant should be more visible.
+
+Examples:
+
+```text
+"How do I get to the airport?"
+
+"What should I do now?"
+
+"Where am I?"
+
+"Find my hotel."
+
+"Explain this journey."
+
+"Translate this."
+```
+
+The visitor assistant should feel like a travel guide.
+
+---
+
+## Employee
+
+Do not use the same conversational assistant UI as passengers.
+
+If an employee assistant exists, it should be professional and task-oriented.
+
+Examples:
+
+```text
+"Show delayed routes."
+
+"Which vehicles are affected?"
+
+"Create an alert for Blue Line."
+
+"Show active incidents."
+```
+
+---
+
+# CRITICAL VISUAL SEPARATION
+
+## Passenger
+
+```text
+Modern
+Mobile-first
+Quick
+Personal
+Transport-focused
+```
+
+## Visitor
+
+```text
+Travel-oriented
+Visual
+Reassuring
+Spacious
+Guide-focused
+International
+```
+
+## Employee
+
+```text
+Professional
+Data-dense
+Desktop-first
+Operational
+Analytical
+```
+
+Do not simply change:
+
+```text
+Navbar
++
+Colors
+```
+
+Each module needs its own:
+
+* Application shell
+* Navigation
+* Authentication
+* Home screen
+* User flow
+* Information architecture
+* Component composition
+* Dashboard
+* Interaction model
+* Responsive behavior
+
+---
+
+# SHARED DESIGN SYSTEM
+
+Do not duplicate basic components.
+
+Create a shared foundation:
+
+```text
+Button
+Input
+Modal
+Drawer
+Dialog
+Tooltip
+Badge
+Toast
+Table
+Tabs
+Skeleton
+Spinner
+```
+
+But allow each module to have specialized components.
+
+```text
+Passenger Components
+
+JourneyCard
+TicketCard
+TripTimeline
+FareBreakdown
+WalletCard
+```
+
+```text
+Visitor Components
+
+DestinationCard
+GuidedStep
+JourneyExplainer
+LanguageSelector
+TravelAssistance
+OfflineJourney
+```
+
+```text
+Employee Components
+
+OperationsMap
+IncidentTable
+VehicleTable
+AlertComposer
+AnalyticsChart
+StatusPanel
+```
+
+The design system should provide consistency without making the three products look identical.
+
+---
+
+# MAIN ENTRY POINT
+
+If the user enters the base domain:
+
+```text
+TransitOne
+```
+
+Show a clean product selector.
+
+```text
+WELCOME TO TRANSITONE
+
+How will you be using TransitOne today?
+
+┌─────────────────────┐
+│ 🚍                  │
+│                     │
+│ Passenger           │
+│ Daily Travel        │
+│                     │
+│ [ Continue ]        │
+└─────────────────────┘
+
+┌─────────────────────┐
+│ 🌍                  │
+│                     │
+│ Visitor             │
+│ Explore India       │
+│                     │
+│ [ Explore ]         │
+└─────────────────────┘
+
+──────────────────────
+
+For Transport Staff
+
+[ Employee Login ]
+```
+
+After selecting a module, users should enter that module's dedicated authentication and experience.
+
+Do not automatically merge the three interfaces again after login.
+
+---
+
+# FINAL DESIGN PRINCIPLE
+
+The goal is:
+
+```text
+ONE TRANSITONE PLATFORM
+
+BUT
+
+THREE DIFFERENT PRODUCTS
+```
+
+The user journeys should feel like:
+
+### Passenger
+
+```text
+I need to get somewhere.
+
+↓
+Find destination
+↓
+Compare routes
+↓
+Book
+↓
+Pay
+↓
+Travel
+↓
+Track
+↓
+Reroute
+```
+
+### Visitor
+
+```text
+I am in a new country.
+
+↓
+Explore
+↓
+Understand
+↓
+Plan journey
+↓
+Get guidance
+↓
+Travel safely
+↓
+Get help anytime
+```
+
+### Employee
+
+```text
+I manage transport operations.
+
+↓
+Monitor
+↓
+Detect
+↓
+Investigate
+↓
+Respond
+↓
+Notify
+↓
+Resolve
+```
+
+---
+
+## IMPORTANT IMPLEMENTATION RULES
+
+* Do not redesign this as one combined dashboard.
+* Do not reuse Passenger navigation inside Visitor or Employee modules.
+* Do not reuse Passenger authentication for employees.
+* Do not make Employee Portal mobile-consumer styled.
+* Do not make Visitor Experience feel like a daily commute application.
+* Keep backend APIs and core domain models reusable.
+* Separate the modules at the routing, shell, authentication, navigation, and feature levels.
+* Use a shared design token system and shared API client.
+* Maintain one backend platform but three clearly independent frontend experiences.
+* Create polished production-quality UI for all three modules.
+* Ensure all screens have loading, empty, error, and responsive states where relevant.
+
+The final result should demonstrate:
+
+> **One TransitOne ecosystem with three distinct users, three separate authentication systems, three application modules, and three purpose-built UI experiences.**
