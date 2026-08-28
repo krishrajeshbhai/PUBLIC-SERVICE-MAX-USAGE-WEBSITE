@@ -11,14 +11,14 @@ export default function ProtectedRoute({ children, requiredRole }) {
 
   if (!user) {
     if (requiredRole === 'employee') {
-      return <Navigate to="/employee-login" replace />;
+      return <Navigate to="/employee/login" replace />;
     }
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/passenger/login" replace />;
   }
 
   if (requiredRole && user.role !== requiredRole) {
     if (requiredRole === 'employee') {
-      return <Navigate to="/employee-login" replace />;
+      return <Navigate to="/employee/login" replace />;
     }
   }
 

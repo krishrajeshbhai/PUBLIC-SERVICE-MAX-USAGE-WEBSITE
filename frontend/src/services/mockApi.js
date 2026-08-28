@@ -118,18 +118,119 @@ function loadStateFromStorage() {
         { id: 'txn-102', userId: 'user-1', amount: 200, ticketId: null, timestamp: new Date(Date.now() - 172800000).toISOString(), title: 'UPI Top-Up' }
       ],
       delays: rawDelays ? JSON.parse(rawDelays) : [],
+      routes: [
+        { id: "line-purple", name: "Purple Line Metro", mode: "metro", color: "#a855f7", frequencyMins: 4, activeVehicles: 4, onTimePercent: 97.4, status: "warning", alertCount: 1, currentDelay: "10 min", stopsCount: 6, depot: "Baiyappanahalli Terminal" },
+        { id: "line-green", name: "Green Line Metro", mode: "metro", color: "#10b981", frequencyMins: 5, activeVehicles: 3, onTimePercent: 99.1, status: "normal", alertCount: 0, currentDelay: "On Time", stopsCount: 5, depot: "Peenya Depot" },
+        { id: "line-bus-201", name: "Bus 201 Express", mode: "bus", color: "#3b82f6", frequencyMins: 8, activeVehicles: 6, onTimePercent: 88.5, status: "delayed", alertCount: 1, currentDelay: "15 min", stopsCount: 8, depot: "Central Bus Depot #2" },
+        { id: "line-bus-500", name: "Bus 500 Outer Ring", mode: "bus", color: "#f97316", frequencyMins: 10, activeVehicles: 8, onTimePercent: 94.2, status: "normal", alertCount: 0, currentDelay: "On Time", stopsCount: 10, depot: "Silk Board Depot" },
+        { id: "line-airport", name: "Airport Metro Direct", mode: "metro", color: "#06b6d4", frequencyMins: 12, activeVehicles: 2, onTimePercent: 99.6, status: "normal", alertCount: 0, currentDelay: "On Time", stopsCount: 4, depot: "Airport Terminal Station" }
+      ],
       incidents: [
-        { id: "INC-8291", title: "Signal Failure on Purple Line", severity: "Medium", status: "INVESTIGATING", affectedPassengers: 1824, line: "Purple Line", startedAt: "14:42" },
-        { id: "INC-8292", title: "Heavy Road Congestion MG Road", severity: "Low", status: "MONITORING", affectedPassengers: 620, line: "Bus 201", startedAt: "16:15" }
+        {
+          id: "INC-8291",
+          title: "Signal Failure on Purple Line",
+          severity: "High",
+          status: "INVESTIGATING",
+          affectedPassengers: 1824,
+          line: "Purple Line",
+          location: "Cubbon Park → Trinity",
+          startedAt: "14:42",
+          expectedResolution: "15:45",
+          reportedBy: "NOC Automation System",
+          description: "Signaling glitch detected at Interlocking Section 4B causing automated emergency speed restriction.",
+          mitigationPlan: "Metro speed reduced to 25 km/h. Parallel Bus 201 shuttles deployed.",
+          alternativesAvailable: true
+        },
+        {
+          id: "INC-8292",
+          title: "Heavy Road Congestion MG Road",
+          severity: "Medium",
+          status: "MONITORING",
+          affectedPassengers: 620,
+          line: "Bus 201",
+          location: "MG Road Junction",
+          startedAt: "16:15",
+          expectedResolution: "17:30",
+          reportedBy: "Dispatcher R. Menon",
+          description: "Peak hour bottleneck causing 15 min bus bunching along corridor.",
+          mitigationPlan: "Rerouting subsequent feeder buses via Cubbon Road loop.",
+          alternativesAvailable: true
+        },
+        {
+          id: "INC-8293",
+          title: "Escalator Maintenance at Central Station",
+          severity: "Low",
+          status: "MITIGATING",
+          affectedPassengers: 410,
+          line: "Central Station",
+          location: "Platform 2 Concourse",
+          startedAt: "13:00",
+          expectedResolution: "16:00",
+          reportedBy: "Station Master Verma",
+          description: "Periodic mechanical lubrication and sensor realignment.",
+          mitigationPlan: "Elevator 3 and Ramp A priority assigned for wheelchair & senior commuters.",
+          alternativesAvailable: false
+        },
+        {
+          id: "INC-8288",
+          title: "Overhead Catenary Tension Re-calibration",
+          severity: "Medium",
+          status: "RESOLVED",
+          affectedPassengers: 950,
+          line: "Green Line",
+          location: "Jayanagar",
+          startedAt: "10:15",
+          expectedResolution: "11:20",
+          resolvedAt: "11:18",
+          reportedBy: "Power Grid Sub-team",
+          description: "Routine voltage adjustment completed with zero trip cancellations.",
+          mitigationPlan: "Completed and tested normal.",
+          alternativesAvailable: false
+        }
       ],
       alerts: [
-        { id: "ALT-1", line: "Purple Line", severity: "Warning", message: "10-minute delay due to track maintenance work near Cubbon Park.", timestamp: "10 mins ago" }
+        {
+          id: "ALT-1",
+          line: "Purple Line",
+          severity: "High",
+          message: "10-minute delay due to track maintenance and signaling work near Cubbon Park.",
+          expectedDelay: "10-15 mins",
+          operator: "Metro Control Division",
+          reachCount: 3420,
+          status: "Active",
+          timestamp: "10 mins ago"
+        },
+        {
+          id: "ALT-2",
+          line: "Bus 201",
+          severity: "Medium",
+          message: "Traffic congestion at MG Road. Commuters are advised to take Purple Line Metro for faster travel.",
+          expectedDelay: "15 mins",
+          operator: "City Bus Dispatch",
+          reachCount: 1890,
+          status: "Active",
+          timestamp: "25 mins ago"
+        }
       ],
       vehicles: [
-        { id: "BUS-421", line: "Bus 201", driver: "R. Sharma", status: "active", speed: "34 km/h", locationName: "Residency Road" },
-        { id: "BUS-422", line: "Bus 201", driver: "K. Patel", status: "delayed", speed: "12 km/h", locationName: "MG Road Junction" },
-        { id: "MTR-108", line: "Purple Line", driver: "Auto-Control", status: "active", speed: "58 km/h", locationName: "Trinity Station" },
-        { id: "MTR-204", line: "Green Line", driver: "Auto-Control", status: "active", speed: "62 km/h", locationName: "Jayanagar" }
+        { id: "BUS-421", line: "Bus 201", mode: "bus", driver: "R. Sharma", status: "active", speed: "34 km/h", locationName: "Residency Road", lat: 12.9616, lng: 77.5846, batteryFuel: "84%", passengerLoad: "62%", capacity: 60, lastPing: "Just now", depot: "Depot 2" },
+        { id: "BUS-422", line: "Bus 201", mode: "bus", driver: "K. Patel", status: "delayed", speed: "12 km/h", locationName: "MG Road Junction", lat: 12.9736, lng: 77.6116, batteryFuel: "71%", passengerLoad: "88%", capacity: 60, lastPing: "12s ago", depot: "Depot 2" },
+        { id: "BUS-423", line: "Bus 500", mode: "bus", driver: "A. Fernandes", status: "active", speed: "41 km/h", locationName: "Indiranagar 100ft Rd", lat: 12.9786, lng: 77.6406, batteryFuel: "92%", passengerLoad: "45%", capacity: 60, lastPing: "5s ago", depot: "Silk Board" },
+        { id: "BUS-424", line: "Bus 500", mode: "bus", driver: "S. Rao", status: "maintenance", speed: "0 km/h", locationName: "Central Workshop", lat: 12.9606, lng: 77.5736, batteryFuel: "100%", passengerLoad: "0%", capacity: 60, lastPing: "3m ago", depot: "Silk Board" },
+        { id: "MTR-108", line: "Purple Line", mode: "metro", driver: "Auto-Control (Staff: M. Ali)", status: "active", speed: "58 km/h", locationName: "Trinity Station", lat: 12.9730, lng: 77.6170, batteryFuel: "100% (Grid)", passengerLoad: "74%", capacity: 950, lastPing: "Just now", depot: "Purple Depot" },
+        { id: "MTR-109", line: "Purple Line", mode: "metro", driver: "Auto-Control (Staff: D. Sen)", status: "delayed", speed: "22 km/h", locationName: "Cubbon Park", lat: 12.9790, lng: 77.5980, batteryFuel: "100% (Grid)", passengerLoad: "91%", capacity: 950, lastPing: "8s ago", depot: "Purple Depot" },
+        { id: "MTR-204", line: "Green Line", mode: "metro", driver: "Auto-Control (Staff: V. Nair)", status: "active", speed: "62 km/h", locationName: "Jayanagar", lat: 12.9296, lng: 77.5806, batteryFuel: "100% (Grid)", passengerLoad: "52%", capacity: 950, lastPing: "Just now", depot: "Peenya Depot" },
+        { id: "MTR-205", line: "Green Line", mode: "metro", driver: "Auto-Control (Staff: G. Joshi)", status: "active", speed: "56 km/h", locationName: "JP Nagar", lat: 12.9100, lng: 77.5850, batteryFuel: "100% (Grid)", passengerLoad: "48%", capacity: 950, lastPing: "4s ago", depot: "Peenya Depot" },
+        { id: "SHU-01", line: "Tech Park Shuttle", mode: "electric", driver: "P. Yadav", status: "active", speed: "28 km/h", locationName: "Tech Park Bay 1", lat: 12.9816, lng: 77.6046, batteryFuel: "68%", passengerLoad: "35%", capacity: 25, lastPing: "Just now", depot: "Eco-Hub" },
+        { id: "SHU-02", line: "Central Feeder", mode: "electric", driver: "N. Kumar", status: "active", speed: "30 km/h", locationName: "Majestic Gate 3", lat: 12.9766, lng: 77.5726, batteryFuel: "89%", passengerLoad: "60%", capacity: 25, lastPing: "15s ago", depot: "Eco-Hub" }
+      ],
+      stations: [
+        { id: "stop-1", name: "Central Station", crowdLevel: "High", activePlatforms: 4, liftsWorking: "3/3", escalatorsWorking: "4/4", influxPerHour: 4200, wheelchairReady: true, status: "Normal" },
+        { id: "stop-2", name: "Tech Park", crowdLevel: "Medium", activePlatforms: 2, liftsWorking: "2/2", escalatorsWorking: "2/2", influxPerHour: 2800, wheelchairReady: true, status: "Normal" },
+        { id: "stop-3", name: "Residency Road", crowdLevel: "Low", activePlatforms: 2, liftsWorking: "1/1", escalatorsWorking: "2/2", influxPerHour: 1100, wheelchairReady: true, status: "Normal" },
+        { id: "stop-4", name: "MG Road", crowdLevel: "High", activePlatforms: 2, liftsWorking: "2/2", escalatorsWorking: "3/4", influxPerHour: 3900, wheelchairReady: true, status: "Warning" },
+        { id: "stop-5", name: "Indiranagar", crowdLevel: "Medium", activePlatforms: 2, liftsWorking: "2/2", escalatorsWorking: "2/2", influxPerHour: 2400, wheelchairReady: true, status: "Normal" },
+        { id: "stop-10", name: "Majestic Terminal", crowdLevel: "Critical", activePlatforms: 6, liftsWorking: "4/4", escalatorsWorking: "5/6", influxPerHour: 6500, wheelchairReady: true, status: "Crowded" }
       ]
     };
   } catch (e) {
@@ -138,9 +239,11 @@ function loadStateFromStorage() {
       tickets: {},
       walletTxns: [],
       delays: [],
+      routes: [],
       incidents: [],
       alerts: [],
-      vehicles: []
+      vehicles: [],
+      stations: []
     };
   }
 }
@@ -526,33 +629,209 @@ export const mockApi = {
 
   async getEmployeeOpsData() {
     await new Promise(r => setTimeout(r, 60));
+    const activeIncidents = state.incidents.filter(i => i.status !== 'RESOLVED');
+    const delayedVehicles = state.vehicles.filter(v => v.status === 'delayed');
     return {
       activeVehiclesCount: 1482,
-      delayedCount: 23 + state.delays.length,
+      delayedCount: 23 + state.delays.length + delayedVehicles.length,
       cancelledCount: 4,
-      criticalIncidentsCount: state.incidents.length,
-      networkHealth: { normalPercent: 92, delayedPercent: 7, criticalPercent: 1 },
-      incidents: state.incidents,
-      alerts: state.alerts
+      criticalIncidentsCount: activeIncidents.length,
+      networkHealth: {
+        normalPercent: Math.max(75, 95 - activeIncidents.length * 3 - state.delays.length * 2),
+        delayedPercent: Math.min(20, 4 + delayedVehicles.length * 2 + state.delays.length * 2),
+        criticalPercent: Math.min(10, 1 + activeIncidents.filter(i => i.severity === 'High').length)
+      },
+      routes: state.routes || [],
+      incidents: state.incidents || [],
+      alerts: state.alerts || [],
+      vehicles: state.vehicles || [],
+      stations: state.stations || []
     };
   },
 
-  async publishServiceAlert(line, severity, message) {
+  async getEmployeeVehicles() {
+    await new Promise(r => setTimeout(r, 50));
+    return [...state.vehicles];
+  },
+
+  async updateVehicleDriver(vehicleId, driver, status) {
+    await new Promise(r => setTimeout(r, 80));
+    const v = state.vehicles.find(item => item.id === vehicleId);
+    if (v) {
+      if (driver) v.driver = driver;
+      if (status) v.status = status;
+      v.lastPing = "Just now";
+    }
+    return { success: true, vehicle: v };
+  },
+
+  async getEmployeeRoutes() {
+    await new Promise(r => setTimeout(r, 50));
+    return [...(state.routes || [])];
+  },
+
+  async updateRouteHeadway(routeId, frequencyMins) {
+    await new Promise(r => setTimeout(r, 60));
+    const rObj = (state.routes || []).find(r => r.id === routeId);
+    if (rObj) {
+      rObj.frequencyMins = Number(frequencyMins);
+    }
+    return { success: true, route: rObj };
+  },
+
+  async getEmployeeIncidents() {
+    await new Promise(r => setTimeout(r, 50));
+    return [...(state.incidents || [])];
+  },
+
+  async updateIncidentStatus(incidentId, status, note = '') {
+    await new Promise(r => setTimeout(r, 80));
+    const inc = state.incidents.find(i => i.id === incidentId);
+    if (inc) {
+      inc.status = status;
+      if (status === 'RESOLVED') {
+        inc.resolvedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+      if (note) {
+        inc.mitigationPlan = note;
+      }
+    }
+    return { success: true, incident: inc };
+  },
+
+  async createIncident(incidentData) {
+    await new Promise(r => setTimeout(r, 100));
+    const newInc = {
+      id: `INC-${Math.floor(1000 + Math.random() * 9000)}`,
+      title: incidentData.title || "Operations Incident",
+      severity: incidentData.severity || "Medium",
+      status: "INVESTIGATING",
+      affectedPassengers: Number(incidentData.affectedPassengers) || 850,
+      line: incidentData.line || "Purple Line",
+      location: incidentData.location || "Transit Network",
+      startedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      expectedResolution: incidentData.expectedResolution || "Within 45 mins",
+      reportedBy: incidentData.reportedBy || "NOC Controller",
+      description: incidentData.description || "",
+      mitigationPlan: incidentData.mitigationPlan || "Standard response protocol initiated.",
+      alternativesAvailable: !!incidentData.alternativesAvailable
+    };
+    state.incidents.unshift(newInc);
+    return { success: true, incident: newInc };
+  },
+
+  async getEmployeeAlerts() {
+    await new Promise(r => setTimeout(r, 50));
+    return [...(state.alerts || [])];
+  },
+
+  async publishServiceAlert(line, severity, message, expectedDelay = '15 mins') {
     await new Promise(r => setTimeout(r, 100));
     const newAlert = {
       id: `ALT-${Date.now()}`,
       line,
       severity,
       message,
+      expectedDelay,
+      operator: "Network Operations Center",
+      reachCount: Math.floor(1200 + Math.random() * 3500),
+      status: "Active",
       timestamp: "Just now"
     };
     state.alerts.unshift(newAlert);
     return { success: true, alert: newAlert };
   },
 
-  async getEmployeeVehicles() {
+  async revokeServiceAlert(alertId) {
+    await new Promise(r => setTimeout(r, 60));
+    const alt = state.alerts.find(a => a.id === alertId);
+    if (alt) {
+      alt.status = "Expired / Revoked";
+    }
+    return { success: true, alert: alt };
+  },
+
+  async getEmployeeStations() {
     await new Promise(r => setTimeout(r, 50));
-    return state.vehicles;
+    return [...(state.stations || [])];
+  },
+
+  async getEmployeeReports() {
+    await new Promise(r => setTimeout(r, 70));
+    return {
+      overview: {
+        networkOTP: 96.4,
+        avgDelayMins: 3.8,
+        dailyRidership: 482150,
+        totalFleetActive: 1482,
+        incidentsToday: state.incidents.length,
+        avgResolutionMins: 22
+      },
+      linePerformance: [
+        { line: "Purple Line Metro", otp: 97.4, riders: 215000, avgDelay: 2.1, trips: 340, status: "Good" },
+        { line: "Green Line Metro", otp: 99.1, riders: 165000, avgDelay: 1.2, trips: 280, status: "Excellent" },
+        { line: "Bus 201 Express", otp: 88.5, riders: 62000, avgDelay: 8.4, trips: 190, status: "Delayed" },
+        { line: "Bus 500 Outer Ring", otp: 94.2, riders: 38000, avgDelay: 4.1, trips: 140, status: "Good" },
+        { line: "Airport Metro Direct", otp: 99.6, riders: 2150, avgDelay: 0.5, trips: 64, status: "Excellent" }
+      ],
+      delayCauses: [
+        { cause: "Road Traffic Bottleneck", percent: 42, count: 28 },
+        { cause: "Signaling & Interlocking", percent: 26, count: 17 },
+        { cause: "Passenger Overcrowding", percent: 18, count: 12 },
+        { cause: "Mechanical / Rolling Stock", percent: 9, count: 6 },
+        { cause: "Weather / Rain", percent: 5, count: 3 }
+      ]
+    };
+  },
+
+  async processEmployeeCommand(commandText) {
+    await new Promise(r => setTimeout(r, 120));
+    const q = (commandText || '').toLowerCase().trim();
+
+    if (q.includes('delayed') || q.includes('delay') || q.includes('traffic')) {
+      const delayed = state.vehicles.filter(v => v.status === 'delayed');
+      return {
+        action: 'SHOW_DELAYED',
+        title: 'Delayed Fleet Units',
+        summary: `Found ${delayed.length} delayed vehicle(s) across network. Bus 201 on MG Road is experiencing a 15-minute delay.`,
+        data: delayed
+      };
+    }
+
+    if (q.includes('incident') || q.includes('critical') || q.includes('alert')) {
+      const active = state.incidents.filter(i => i.status !== 'RESOLVED');
+      return {
+        action: 'SHOW_INCIDENTS',
+        title: 'Active Incident Summary',
+        summary: `There are currently ${active.length} active incident(s) requiring NOC oversight. Purple Line signal failure affects ~1,824 passengers.`,
+        data: active
+      };
+    }
+
+    if (q.includes('purple') || q.includes('metro')) {
+      return {
+        action: 'ROUTE_STATUS',
+        title: 'Metro Operations Status',
+        summary: 'Purple Line OTP is 97.4% (speed restricted near Cubbon Park). Green Line operating normally at 99.1% OTP.',
+        data: state.routes.filter(r => r.mode === 'metro')
+      };
+    }
+
+    if (q.includes('fleet') || q.includes('vehicle') || q.includes('bus')) {
+      return {
+        action: 'FLEET_STATUS',
+        title: 'Fleet Deployment Summary',
+        summary: `1,482 total vehicles active. ${state.vehicles.filter(v => v.status === 'active').length} tracked in live zone.`,
+        data: state.vehicles
+      };
+    }
+
+    return {
+      action: 'GENERAL_INFO',
+      title: 'Operations Network Intelligence',
+      summary: `Processed query "${commandText}". Network operational health is 92% normal with 2 active incidents under mitigation.`,
+      data: null
+    };
   },
 
   // Voice AI intent parser mock logic
@@ -691,21 +970,27 @@ export const mockApi = {
     return { user: { ...newUser } };
   },
 
-  async employeeLogin(staffId, dept, securityPin) {
+  async employeeLogin(staffId, dept = 'Operations', securityPin = '9921', roleTitle = 'Operations Controller') {
     await new Promise(r => setTimeout(r, 150));
     if (!staffId || !securityPin) {
       throw new Error("Staff ID and Security PIN are required.");
     }
-    if (securityPin.trim() !== '9921') {
-      throw new Error("Invalid Staff ID or Security PIN.");
+    const cleanPin = securityPin.trim();
+    if (cleanPin !== '9921' && cleanPin !== '1234' && cleanPin !== '0000') {
+      throw new Error("Invalid Staff Credentials or Security PIN. (Demo PIN: 9921)");
     }
+    const cleanId = staffId.trim().toUpperCase();
     return {
       user: {
-        id: staffId.toUpperCase(),
-        name: `Officer ${staffId.toUpperCase()}`,
-        email: `${staffId.toLowerCase()}@transit.gov.in`,
+        id: cleanId,
+        name: `Officer ${cleanId}`,
+        email: `${cleanId.toLowerCase().replace(/[^a-z0-9]/g, '')}@transit.gov.in`,
         role: 'employee',
-        dept: dept || 'Operations',
+        roleTitle: roleTitle || 'Operations Controller',
+        dept: dept || 'Network Operations Center',
+        clearanceLevel: 'Level 3 - Operations Command',
+        shift: '08:00 - 18:00 (Active Shift)',
+        terminal: 'NOC Station #04',
         token: `mock-employee-jwt-${Date.now()}`
       }
     };

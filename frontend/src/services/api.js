@@ -179,19 +179,43 @@ export const api = {
     }
   },
 
-  async publishServiceAlert(line, severity, message) {
-    if (USE_MOCK_API) return mockApi.publishServiceAlert(line, severity, message);
+  async publishServiceAlert(line, severity, message, expectedDelay) {
+    if (USE_MOCK_API) return mockApi.publishServiceAlert(line, severity, message, expectedDelay);
     try {
       const res = await fetch(`${BASE_URL}/employee/alerts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ line, severity, message })
+        body: JSON.stringify({ line, severity, message, expectedDelay })
       });
-      if (!res.ok) return mockApi.publishServiceAlert(line, severity, message);
+      if (!res.ok) return mockApi.publishServiceAlert(line, severity, message, expectedDelay);
       const raw = await res.json();
       return unwrapResponse(raw);
     } catch (e) {
-      return mockApi.publishServiceAlert(line, severity, message);
+      return mockApi.publishServiceAlert(line, severity, message, expectedDelay);
+    }
+  },
+
+  async revokeServiceAlert(alertId) {
+    if (USE_MOCK_API) return mockApi.revokeServiceAlert(alertId);
+    try {
+      const res = await fetch(`${BASE_URL}/employee/alerts/${alertId}/revoke`, { method: 'POST' });
+      if (!res.ok) return mockApi.revokeServiceAlert(alertId);
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.revokeServiceAlert(alertId);
+    }
+  },
+
+  async getEmployeeAlerts() {
+    if (USE_MOCK_API) return mockApi.getEmployeeAlerts();
+    try {
+      const res = await fetch(`${BASE_URL}/employee/alerts`);
+      if (!res.ok) return mockApi.getEmployeeAlerts();
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.getEmployeeAlerts();
     }
   },
 
@@ -204,6 +228,134 @@ export const api = {
       return unwrapResponse(raw);
     } catch (e) {
       return mockApi.getEmployeeVehicles();
+    }
+  },
+
+  async updateVehicleDriver(vehicleId, driver, status) {
+    if (USE_MOCK_API) return mockApi.updateVehicleDriver(vehicleId, driver, status);
+    try {
+      const res = await fetch(`${BASE_URL}/employee/vehicles/${vehicleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driver, status })
+      });
+      if (!res.ok) return mockApi.updateVehicleDriver(vehicleId, driver, status);
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.updateVehicleDriver(vehicleId, driver, status);
+    }
+  },
+
+  async getEmployeeRoutes() {
+    if (USE_MOCK_API) return mockApi.getEmployeeRoutes();
+    try {
+      const res = await fetch(`${BASE_URL}/employee/routes`);
+      if (!res.ok) return mockApi.getEmployeeRoutes();
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.getEmployeeRoutes();
+    }
+  },
+
+  async updateRouteHeadway(routeId, frequencyMins) {
+    if (USE_MOCK_API) return mockApi.updateRouteHeadway(routeId, frequencyMins);
+    try {
+      const res = await fetch(`${BASE_URL}/employee/routes/${routeId}/headway`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ frequencyMins })
+      });
+      if (!res.ok) return mockApi.updateRouteHeadway(routeId, frequencyMins);
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.updateRouteHeadway(routeId, frequencyMins);
+    }
+  },
+
+  async getEmployeeIncidents() {
+    if (USE_MOCK_API) return mockApi.getEmployeeIncidents();
+    try {
+      const res = await fetch(`${BASE_URL}/employee/incidents`);
+      if (!res.ok) return mockApi.getEmployeeIncidents();
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.getEmployeeIncidents();
+    }
+  },
+
+  async updateIncidentStatus(incidentId, status, note = '') {
+    if (USE_MOCK_API) return mockApi.updateIncidentStatus(incidentId, status, note);
+    try {
+      const res = await fetch(`${BASE_URL}/employee/incidents/${incidentId}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, note })
+      });
+      if (!res.ok) return mockApi.updateIncidentStatus(incidentId, status, note);
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.updateIncidentStatus(incidentId, status, note);
+    }
+  },
+
+  async createIncident(incidentData) {
+    if (USE_MOCK_API) return mockApi.createIncident(incidentData);
+    try {
+      const res = await fetch(`${BASE_URL}/employee/incidents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(incidentData)
+      });
+      if (!res.ok) return mockApi.createIncident(incidentData);
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.createIncident(incidentData);
+    }
+  },
+
+  async getEmployeeStations() {
+    if (USE_MOCK_API) return mockApi.getEmployeeStations();
+    try {
+      const res = await fetch(`${BASE_URL}/employee/stations`);
+      if (!res.ok) return mockApi.getEmployeeStations();
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.getEmployeeStations();
+    }
+  },
+
+  async getEmployeeReports() {
+    if (USE_MOCK_API) return mockApi.getEmployeeReports();
+    try {
+      const res = await fetch(`${BASE_URL}/employee/reports`);
+      if (!res.ok) return mockApi.getEmployeeReports();
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.getEmployeeReports();
+    }
+  },
+
+  async processEmployeeCommand(commandText) {
+    if (USE_MOCK_API) return mockApi.processEmployeeCommand(commandText);
+    try {
+      const res = await fetch(`${BASE_URL}/employee/command`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: commandText })
+      });
+      if (!res.ok) return mockApi.processEmployeeCommand(commandText);
+      const raw = await res.json();
+      return unwrapResponse(raw);
+    } catch (e) {
+      return mockApi.processEmployeeCommand(commandText);
     }
   },
 
@@ -265,19 +417,19 @@ export const api = {
     }
   },
 
-  async employeeLogin(staffId, dept, securityPin) {
-    if (USE_MOCK_API) return mockApi.employeeLogin(staffId, dept, securityPin);
+  async employeeLogin(staffId, dept, securityPin, roleTitle) {
+    if (USE_MOCK_API) return mockApi.employeeLogin(staffId, dept, securityPin, roleTitle);
     try {
       const res = await fetch(`${BASE_URL}/auth/employee`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ staffId, dept, securityPin })
+        body: JSON.stringify({ staffId, dept, securityPin, roleTitle })
       });
-      if (!res.ok) return mockApi.employeeLogin(staffId, dept, securityPin);
+      if (!res.ok) return mockApi.employeeLogin(staffId, dept, securityPin, roleTitle);
       const raw = await res.json();
       return unwrapResponse(raw);
     } catch (e) {
-      return mockApi.employeeLogin(staffId, dept, securityPin);
+      return mockApi.employeeLogin(staffId, dept, securityPin, roleTitle);
     }
   },
 

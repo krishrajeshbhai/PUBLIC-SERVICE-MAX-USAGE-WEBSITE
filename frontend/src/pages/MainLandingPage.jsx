@@ -297,7 +297,7 @@ export default function MainLandingPage() {
           <Shield size={16} color="#94a3b8" /> Transport Operator or City Official?
         </div>
         <button
-          onClick={() => navigate('/employee-login')}
+          onClick={() => navigate('/employee/login')}
           style={{
             background: 'transparent',
             border: '1px solid rgba(255, 255, 255, 0.2)',

@@ -28,10 +28,18 @@ import VisitorAssistant from './modules/visitor/assistant/VisitorAssistant';
 import VisitorHelpCenter from './modules/visitor/help/VisitorHelpCenter';
 import VisitorProfile from './modules/visitor/profile/VisitorProfile';
 
-// Module 3: Employee Operations Portal (Kept Untouched as Requested)
-import EmployeeLoginPage from './pages/auth/EmployeeLoginPage';
-import EmployeeDashboardPage from './pages/employee/EmployeeDashboardPage';
-import EmployeeVehiclesPage from './pages/employee/EmployeeVehiclesPage';
+// Module 3: Employee Operations Portal Imports
+import EmployeeShell from './modules/employee/EmployeeShell';
+import EmployeeAuth from './modules/employee/auth/EmployeeAuth';
+import EmployeeDashboard from './modules/employee/dashboard/EmployeeDashboard';
+import EmployeeNetwork from './modules/employee/network/EmployeeNetwork';
+import EmployeeRoutes from './modules/employee/routes/EmployeeRoutes';
+import EmployeeVehicles from './modules/employee/vehicles/EmployeeVehicles';
+import EmployeeIncidents from './modules/employee/incidents/EmployeeIncidents';
+import EmployeeAlerts from './modules/employee/alerts/EmployeeAlerts';
+import EmployeeStations from './modules/employee/stations/EmployeeStations';
+import EmployeeReports from './modules/employee/reports/EmployeeReports';
+import EmployeeSettings from './modules/employee/settings/EmployeeSettings';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 import { initThemeFromUrlOrUser } from './store/uxProfileStore';
@@ -222,14 +230,39 @@ export default function App() {
         />
 
         {/* ========================================================
-            MODULE 3: EMPLOYEE PORTAL (Untouched as requested)
+            MODULE 3: EMPLOYEE OPERATIONS PORTAL
             ======================================================== */}
-        <Route path="/employee-login" element={<EmployeeLoginPage />} />
+        <Route path="/employee" element={<Navigate to="/employee/dashboard" replace />} />
+        <Route path="/employee-login" element={<Navigate to="/employee/login" replace />} />
+        <Route path="/employee/login" element={<EmployeeAuth />} />
+
         <Route
-          path="/employee"
+          path="/employee/dashboard"
           element={
             <ProtectedRoute requiredRole="employee">
-              <EmployeeDashboardPage />
+              <EmployeeShell>
+                <EmployeeDashboard />
+              </EmployeeShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/network"
+          element={
+            <ProtectedRoute requiredRole="employee">
+              <EmployeeShell>
+                <EmployeeNetwork />
+              </EmployeeShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/routes"
+          element={
+            <ProtectedRoute requiredRole="employee">
+              <EmployeeShell>
+                <EmployeeRoutes />
+              </EmployeeShell>
             </ProtectedRoute>
           }
         />
@@ -237,7 +270,59 @@ export default function App() {
           path="/employee/vehicles"
           element={
             <ProtectedRoute requiredRole="employee">
-              <EmployeeVehiclesPage />
+              <EmployeeShell>
+                <EmployeeVehicles />
+              </EmployeeShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/incidents"
+          element={
+            <ProtectedRoute requiredRole="employee">
+              <EmployeeShell>
+                <EmployeeIncidents />
+              </EmployeeShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/alerts"
+          element={
+            <ProtectedRoute requiredRole="employee">
+              <EmployeeShell>
+                <EmployeeAlerts />
+              </EmployeeShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/stations"
+          element={
+            <ProtectedRoute requiredRole="employee">
+              <EmployeeShell>
+                <EmployeeStations />
+              </EmployeeShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/reports"
+          element={
+            <ProtectedRoute requiredRole="employee">
+              <EmployeeShell>
+                <EmployeeReports />
+              </EmployeeShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/settings"
+          element={
+            <ProtectedRoute requiredRole="employee">
+              <EmployeeShell>
+                <EmployeeSettings />
+              </EmployeeShell>
             </ProtectedRoute>
           }
         />
