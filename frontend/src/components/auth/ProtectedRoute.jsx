@@ -13,12 +13,24 @@ export default function ProtectedRoute({ children, requiredRole }) {
     if (requiredRole === 'employee') {
       return <Navigate to="/employee/login" replace />;
     }
-    return <Navigate to="/passenger/login" replace />;
+    if (requiredRole === 'visitor') {
+      return <Navigate to="/visitor/welcome" replace />;
+    }
+    if (requiredRole === 'passenger') {
+      return <Navigate to="/passenger/login" replace />;
+    }
+    return <Navigate to="/" replace />;
   }
 
   if (requiredRole && user.role !== requiredRole) {
     if (requiredRole === 'employee') {
       return <Navigate to="/employee/login" replace />;
+    }
+    if (requiredRole === 'visitor') {
+      return <Navigate to="/visitor/welcome" replace />;
+    }
+    if (requiredRole === 'passenger') {
+      return <Navigate to="/passenger/login" replace />;
     }
   }
 

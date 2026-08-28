@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Compass, Navigation, Map, MessageSquare, HelpCircle, User, Globe, ArrowLeft, Shield, Sparkles } from 'lucide-react';
 import { getLanguage, setLanguage, LANGUAGES, t } from '../../i18n/i18n';
 import { getAuthUser } from '../../store/authStore';
+import { getUXProfile, setAgePersona, subscribeUXProfile, UX_MODES } from '../../store/uxProfileStore';
 
 export default function VisitorShell({ children }) {
   const location = useLocation();
@@ -10,6 +11,11 @@ export default function VisitorShell({ children }) {
   const [lang, setLang] = useState(getLanguage());
   const [currency, setCurrency] = useState('USD');
   const [user, setUser] = useState(getAuthUser() || { nationality: '🇺🇸 United States', hotel: 'The Taj Connemara' });
+  const [uxProfile, setUXProfile] = useState(getUXProfile());
+
+  useEffect(() => {
+    return subscribeUXProfile(setUXProfile);
+  }, []);
 
   const navLinks = [
     { path: '/visitor/explore', label: 'Explore', icon: Compass },
@@ -122,9 +128,73 @@ export default function VisitorShell({ children }) {
             })}
           </nav>
 
-          {/* Language Switcher & Currency Toggle */}
+          {/* Right Controls: Persona Switcher + Currency + Language + SOS */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* Currency Pill */}
+            {/* Age Adaptive Persona Switcher */}
+            <div style={{
+              display: 'flex',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '999px',
+              padding: '3px 4px',
+              gap: '4px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setAgePersona('senior')}
+                title="Senior Mode: Big Text & High Contrast"
+                style={{
+                  background: uxProfile.mode === UX_MODES.SENIOR ? '#fbbf24' : 'transparent',
+                  color: uxProfile.mode === UX_MODES.SENIOR ? '#000' : '#cbd5e1',
+                  border: 'none',
+                  borderRadius: '999px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                👵 Senior
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAgePersona('genz')}
+                title="Gen-Z Mode: Cyberpunk Neon Glow"
+                style={{
+                  background: uxProfile.mode === UX_MODES.GENZ ? 'linear-gradient(135deg, #00f0ff, #b026ff)' : 'transparent',
+                  color: uxProfile.mode === UX_MODES.GENZ ? '#000' : '#cbd5e1',
+                  border: 'none',
+                  borderRadius: '999px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                ⚡ Gen-Z
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAgePersona('standard')}
+                title="Standard Pro Mode"
+                style={{
+                  background: uxProfile.mode === UX_MODES.STANDARD ? '#f59e0b' : 'transparent',
+                  color: uxProfile.mode === UX_MODES.STANDARD ? '#000' : '#cbd5e1',
+                  border: 'none',
+                  borderRadius: '999px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                💼 Standard
+              </button>
+            </div>
+
+            {/* Currency Selector */}
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
