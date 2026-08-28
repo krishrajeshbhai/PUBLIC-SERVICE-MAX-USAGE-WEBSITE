@@ -1,19 +1,77 @@
-TransitOne is an intelligent public transport platform that combines journey planning, booking, payments, live tracking, and rerouting in one place.
+# 🚆 TransitOne — Unified Multi-Modal Mobility Ecosystem
 
-It makes travel simpler and more accessible for passengers and visitors while helping transport operators manage disruptions efficiently.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/transitone)
 
-TransitOne solves the problem of fragmented and confusing public transport systems by bringing everything into one unified platform.
+**TransitOne** turns *"how do I get from A to B"* into one search, one unified ticket, and one wallet — across bus, metro, and walking — and automatically re-plans your trip the moment a delay occurs.
 
-Instead of using multiple apps for routes, tickets, payments, tracking, and updates, users get one connected travel experience.
+Built as three distinct user products inside one unified platform:
+1. 🚍 **Passenger App** (`/passenger`): High-utility mobile-first commuter product with 1-click usual route booking, live connected itinerary timeline, digital QR ticket, wallet balance auto-debit, and instant delay reroute simulation.
+2. 🌍 **Visitor Experience** (`/visitor`): Reassuring international travel companion supporting 9 languages (EN, HI, TA, TE, FR, DE, ES, JA, KO), 5-step onboarding wizard, tourist destination guides with audio explanations, step-by-step navigation, driver translation cards, and 24/7 SOS safety center.
+3. 👔 **Employee Portal** (`/employee`): Dedicated operations & fleet management platform for transit staff.
 
-TransitOne includes an AI-powered voice and chat assistant that lets users plan journeys, book tickets, track transport, and get travel information using simple voice commands.
+---
 
-This makes public transport more accessible and easier to use by reducing the need to navigate complex interfaces.
+## ⚡ 1-Tap Vercel Deployment
 
-TransitOne benefits three key user groups: passengers save time, visitors receive guided multilingual assistance, and transport operators can efficiently manage disruptions.
+Deploying directly to Vercel takes **0 configuration**:
 
-This creates a simpler and more connected public transport experience for everyone.
+1. Push this repository to GitHub.
+2. Click **"Import"** on [Vercel](https://vercel.com).
+3. Select your GitHub repository.
+4. Click **"Deploy"** — `vercel.json` automatically configures the Vite build, output directory (`frontend/dist`), and SPA routing rewrites.
 
-Ultimately, TransitOne makes public transportation simpler, more connected, and more accessible through one intelligent platform.
+---
 
-By combining disconnected services, it helps users complete their journeys with less effort, greater convenience, and confidence.
+## 🚀 Quick Local Setup
+
+### 1. Clone & Install Dependencies
+```bash
+git clone https://github.com/your-username/transitone.git
+cd transitone
+npm run install:all
+```
+
+### 2. Run Frontend Development Server
+```bash
+npm run dev
+```
+Open **`http://localhost:5173`** in your browser.
+
+### 3. Build for Production
+```bash
+npm run build
+```
+Creates production-ready bundle in `frontend/dist/`.
+
+---
+
+## 🏗️ Architecture & Project Structure
+
+```text
+transitone/
+├── vercel.json                 # Root Vercel zero-config deployment descriptor
+├── package.json                # Monorepo scripts
+├── .gitignore                  # Clean repository ignores
+│
+├── frontend/                   # Vite + React 18 SPA
+│   ├── vercel.json             # Subfolder Vercel routing fallback
+│   ├── vite.config.js          # Vite build & proxy config
+│   ├── src/
+│   │   ├── modules/
+│   │   │   ├── passenger/      # MODULE 1: Commuter App (Shell, Auth, Home, Search, Tickets, Trips, Wallet, Profile)
+│   │   │   └── visitor/        # MODULE 2: Tourist Experience (Shell, Auth, Onboarding, Explore, Guided Nav, Help)
+│   │   ├── pages/              # Main Landing Product Selector & Employee Portal
+│   │   ├── components/         # Leaflet MapComponent, Dynamic QR, Navbar
+│   │   ├── i18n/               # 9-Language internationalization engine
+│   │   └── services/           # Dual API client (Live Backend + In-Memory Mock Fallback)
+│
+└── backend/                    # NestJS / Express Backend API
+```
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 18, Vite, React Router 6, Leaflet & React-Leaflet, Lucide Icons, Web Speech Synthesis API.
+- **Styling**: CSS Tokens, Dark Mode Glassmorphism, Responsive Mobile Bottom Bar & Desktop Sidebar.
+- **Deployment**: Vercel (Edge CDN, Automated Continuous Deployment, Clean SPA Rewrites).
