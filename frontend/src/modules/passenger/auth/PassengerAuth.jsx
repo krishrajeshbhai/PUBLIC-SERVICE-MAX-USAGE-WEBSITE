@@ -41,18 +41,49 @@ export default function PassengerAuth({ mode = 'login' }) {
     }, 500);
   };
 
-  const handleSocialLogin = (provider) => {
+  const handleQuickLogin = (profileType) => {
     setLoading(true);
     setTimeout(() => {
-      const passengerUser = {
-        id: 'user-1',
-        name: provider === 'google' ? 'Abhiraj Sharma (Google)' : 'Abhiraj Sharma',
-        phone: '+91 98765 43210',
-        email: 'abhiraj@example.com',
-        role: 'passenger',
-        walletBalance: 500,
-        streak: 7
-      };
+      let passengerUser;
+      if (profileType === 'senior') {
+        passengerUser = {
+          id: 'user-senior-1',
+          name: 'Savitri Devi',
+          phone: '+91 98450 11223',
+          email: 'savitri.devi@example.com',
+          role: 'passenger',
+          age: 65,
+          persona: 'senior',
+          accessibility: true,
+          walletBalance: 750,
+          streak: 12
+        };
+      } else if (profileType === 'genz') {
+        passengerUser = {
+          id: 'user-genz-1',
+          name: 'Rahul Varma',
+          phone: '+91 98765 43210',
+          email: 'rahul.v@example.com',
+          role: 'passenger',
+          age: 22,
+          persona: 'genz',
+          walletBalance: 420,
+          streak: 18,
+          carbonKarma: 480
+        };
+      } else {
+        passengerUser = {
+          id: 'user-1',
+          name: 'Abhiraj Sharma',
+          phone: '+91 98765 00112',
+          email: 'abhiraj@example.com',
+          role: 'passenger',
+          age: 32,
+          persona: 'standard',
+          walletBalance: 500,
+          streak: 7
+        };
+      }
       setAuthUser(passengerUser);
       setLoading(false);
       navigate('/passenger/home');
@@ -197,51 +228,46 @@ export default function PassengerAuth({ mode = 'login' }) {
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
             </div>
 
-            {/* Social Logins */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button
-                type="button"
-                onClick={() => handleSocialLogin('google')}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '12px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#e2e8f0',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  cursor: 'pointer'
-                }}
-              >
-                <Globe size={18} color="#60a5fa" /> Continue with Google
-              </button>
+            {/* Quick 1-Click Age-Adaptive Demo Commuter Profiles */}
+            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '10px', textAlign: 'center' }}>
+                ⚡ 1-CLICK DEMO COMMUTER PROFILES
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin('senior')}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    background: 'rgba(251, 191, 36, 0.12)',
+                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                    color: '#fbbf24',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  👵 Senior (Savitri, 65)
+                </button>
 
-              <button
-                type="button"
-                onClick={() => handleSocialLogin('email')}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '12px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#e2e8f0',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  cursor: 'pointer'
-                }}
-              >
-                <Mail size={18} color="#a855f7" /> Continue with Email
-              </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin('genz')}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    background: 'rgba(6, 182, 212, 0.12)',
+                    border: '1px solid rgba(6, 182, 212, 0.3)',
+                    color: '#06b6d4',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  ⚡ Gen-Z (Rahul, 22)
+                </button>
+              </div>
             </div>
           </form>
         )}

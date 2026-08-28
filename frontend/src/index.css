@@ -379,3 +379,89 @@ input:focus, select:focus {
   .glass-panel { padding: 18px !important; border-radius: var(--radius-sm); }
   .btn-primary, .btn-secondary, .btn-warning { padding: 11px 18px; font-size: 0.9rem; }
 }
+
+/* ==========================================================================
+   AGE ADAPTIVE PERSONA STYLING: SENIOR MODE vs GEN-Z CYBERPUNK MODE
+   ========================================================================== */
+
+/* 👵 SENIOR / SIMPLIFIED ACCESSIBLE MODE */
+body.ux-mode-senior {
+  font-size: 1.15rem !important;
+  line-height: 1.65 !important;
+  background-color: #03060c !important;
+}
+
+body.ux-mode-senior h1 { font-size: 2.3rem !important; line-height: 1.25 !important; }
+body.ux-mode-senior h2 { font-size: 1.85rem !important; }
+body.ux-mode-senior h3 { font-size: 1.45rem !important; }
+body.ux-mode-senior p { font-size: 1.1rem !important; color: #f1f5f9 !important; }
+
+body.ux-mode-senior .glass-panel {
+  border: 2px solid #fbbf24 !important;
+  background: #0a0e18 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8) !important;
+}
+
+body.ux-mode-senior button,
+body.ux-mode-senior .btn-primary,
+body.ux-mode-senior .btn-secondary,
+body.ux-mode-senior .btn-warning {
+  padding: 16px 28px !important;
+  font-size: 1.12rem !important;
+  font-weight: 800 !important;
+  border-radius: 14px !important;
+  min-height: 52px !important;
+}
+
+body.ux-mode-senior input,
+body.ux-mode-senior select {
+  font-size: 1.1rem !important;
+  padding: 16px 20px !important;
+  border: 2px solid #60a5fa !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* ⚡ GEN-Z / NEO-CYBERPUNK VIBRANT MODE */
+body.ux-mode-genz {
+  --primary: #00f0ff;
+  --primary-glow: #b026ff;
+  --accent-lime: #39ff14;
+  --accent-pink: #ff007f;
+  background: #04060f !important;
+}
+
+body.ux-mode-genz::before {
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.35) 0%, rgba(176, 38, 255, 0.25) 60%, transparent 100%) !important;
+}
+
+body.ux-mode-genz::after {
+  background: radial-gradient(circle, rgba(57, 255, 20, 0.3) 0%, rgba(255, 0, 127, 0.2) 60%, transparent 100%) !important;
+}
+
+body.ux-mode-genz .glass-panel {
+  background: rgba(10, 15, 35, 0.85) !important;
+  border: 1px solid rgba(0, 240, 255, 0.4) !important;
+  box-shadow: 0 10px 40px rgba(0, 240, 255, 0.15), 0 0 25px rgba(176, 38, 255, 0.2) !important;
+}
+
+body.ux-mode-genz .glass-panel:hover {
+  border-color: #00f0ff !important;
+  box-shadow: 0 15px 50px rgba(0, 240, 255, 0.35), 0 0 35px rgba(176, 38, 255, 0.35) !important;
+}
+
+body.ux-mode-genz .gradient-text {
+  background: linear-gradient(135deg, #00f0ff 0%, #ff007f 40%, #39ff14 80%, #00f0ff 100%) !important;
+  background-size: 200% auto !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  animation: gradientMove 3.5s linear infinite !important;
+}
+
+body.ux-mode-genz .badge-genz {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.25) 0%, rgba(176, 38, 255, 0.25) 100%);
+  border: 1px solid #00f0ff;
+  color: #00f0ff;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+}
+

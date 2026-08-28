@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Search, Compass, Ticket, Wallet, Award, User, Mic, Navigation, LogOut, ArrowLeft } from 'lucide-react';
 import { getAuthUser, logoutUser } from '../../store/authStore';
+import { getUXProfile, setAgePersona, subscribeUXProfile, UX_MODES } from '../../store/uxProfileStore';
 import { api } from '../../services/api';
 import PassengerAssistantModal from './components/PassengerAssistantModal';
 
@@ -11,6 +12,11 @@ export default function PassengerShell({ children, walletBalance = 500, activeTi
   const [user, setUser] = useState(getAuthUser() || { name: 'Abhiraj', phone: '+91 98765 43210', id: 'user-1' });
   const [showAssistant, setShowAssistant] = useState(false);
   const [currentBalance, setCurrentBalance] = useState(walletBalance);
+  const [uxProfile, setUXProfile] = useState(getUXProfile());
+
+  useEffect(() => {
+    return subscribeUXProfile(setUXProfile);
+  }, []);
 
   useEffect(() => {
     async function fetchBalance() {
@@ -145,8 +151,90 @@ export default function PassengerShell({ children, walletBalance = 500, activeTi
             })}
           </nav>
 
-          {/* Right Controls: Wallet & Voice Assistant Button */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Right Controls: Age Persona Switcher + Wallet & Voice Assistant Button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Age Adaptive Persona Switcher */}
+            <div style={{
+              display: 'flex',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '999px',
+              padding: '3px 4px',
+              gap: '4px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setAgePersona('senior')}
+                title="Senior Mode: Big Text & High Contrast"
+                style={{
+                  background: uxProfile.mode === UX_MODES.SENIOR ? '#fbbf24' : 'transparent',
+                  color: uxProfile.mode === UX_MODES.SENIOR ? '#000' : '#cbd5e1',
+                  border: 'none',
+                  borderRadius: '999px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                👵 Senior
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAgePersona('genz')}
+                title="Gen-Z Mode: Cyberpunk Neon & Gamified Streaks"
+                style={{
+                  background: uxProfile.mode === UX_MODES.GENZ ? 'linear-gradient(135deg, #00f0ff, #b026ff)' : 'transparent',
+                  color: uxProfile.mode === UX_MODES.GENZ ? '#000' : '#cbd5e1',
+                  border: 'none',
+                  borderRadius: '999px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                ⚡ Gen-Z
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAgePersona('standard')}
+                title="Standard Pro Mode"
+                style={{
+                  background: uxProfile.mode === UX_MODES.STANDARD ? '#3b82f6' : 'transparent',
+                  color: uxProfile.mode === UX_MODES.STANDARD ? '#fff' : '#cbd5e1',
+                  border: 'none',
+                  borderRadius: '999px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                💼 Standard
+              </button>
+            </div>
+
+            {/* Gen-Z Streak Badge or Senior Voice Prompt */}
+            {uxProfile.mode === UX_MODES.GENZ && (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(255, 0, 127, 0.2), rgba(0, 240, 255, 0.2))',
+                border: '1px solid #00f0ff',
+                color: '#00f0ff',
+                padding: '4px 10px',
+                borderRadius: '999px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                🔥 18D Streak
+              </div>
+            )}
+
             <Link to="/passenger/wallet" style={{ textDecoration: 'none' }}>
               <div style={{
                 background: 'rgba(16, 185, 129, 0.12)',

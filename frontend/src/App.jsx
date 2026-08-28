@@ -86,73 +86,91 @@ export default function App() {
         <Route
           path="/passenger/home"
           element={
-            <PassengerShell walletBalance={walletBalance}>
-              <PassengerHome />
-            </PassengerShell>
+            <ProtectedRoute requiredRole="passenger">
+              <PassengerShell walletBalance={walletBalance}>
+                <PassengerHome />
+              </PassengerShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/passenger/search"
           element={
-            <PassengerShell walletBalance={walletBalance}>
-              <PassengerSearch />
-            </PassengerShell>
+            <ProtectedRoute requiredRole="passenger">
+              <PassengerShell walletBalance={walletBalance}>
+                <PassengerSearch />
+              </PassengerShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/passenger/results"
           element={
-            <PassengerShell walletBalance={walletBalance}>
-              <PassengerResults />
-            </PassengerShell>
+            <ProtectedRoute requiredRole="passenger">
+              <PassengerShell walletBalance={walletBalance}>
+                <PassengerResults />
+              </PassengerShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/passenger/journeys"
           element={
-            <PassengerShell walletBalance={walletBalance}>
-              <PassengerResults />
-            </PassengerShell>
+            <ProtectedRoute requiredRole="passenger">
+              <PassengerShell walletBalance={walletBalance}>
+                <PassengerResults />
+              </PassengerShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/passenger/trips"
           element={
-            <PassengerShell walletBalance={walletBalance}>
-              <PassengerTrips />
-            </PassengerShell>
+            <ProtectedRoute requiredRole="passenger">
+              <PassengerShell walletBalance={walletBalance}>
+                <PassengerTrips />
+              </PassengerShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/passenger/tickets"
           element={
-            <PassengerShell walletBalance={walletBalance}>
-              <PassengerTickets />
-            </PassengerShell>
+            <ProtectedRoute requiredRole="passenger">
+              <PassengerShell walletBalance={walletBalance}>
+                <PassengerTickets />
+              </PassengerShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/passenger/ticket/:ticketId"
           element={
-            <PassengerShell walletBalance={walletBalance}>
-              <PassengerTickets />
-            </PassengerShell>
+            <ProtectedRoute requiredRole="passenger">
+              <PassengerShell walletBalance={walletBalance}>
+                <PassengerTickets />
+              </PassengerShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/passenger/wallet"
           element={
-            <PassengerShell walletBalance={walletBalance}>
-              <PassengerWallet />
-            </PassengerShell>
+            <ProtectedRoute requiredRole="passenger">
+              <PassengerShell walletBalance={walletBalance}>
+                <PassengerWallet />
+              </PassengerShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/passenger/profile"
           element={
-            <PassengerShell walletBalance={walletBalance}>
-              <PassengerProfile />
-            </PassengerShell>
+            <ProtectedRoute requiredRole="passenger">
+              <PassengerShell walletBalance={walletBalance}>
+                <PassengerProfile />
+              </PassengerShell>
+            </ProtectedRoute>
           }
         />
 
@@ -167,65 +185,81 @@ export default function App() {
         <Route
           path="/visitor/explore"
           element={
-            <VisitorShell>
-              <VisitorExplore />
-            </VisitorShell>
+            <ProtectedRoute requiredRole="visitor">
+              <VisitorShell>
+                <VisitorExplore />
+              </VisitorShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/visitor/home"
           element={
-            <VisitorShell>
-              <VisitorExplore />
-            </VisitorShell>
+            <ProtectedRoute requiredRole="visitor">
+              <VisitorShell>
+                <VisitorExplore />
+              </VisitorShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/visitor/destination/:id"
           element={
-            <VisitorShell>
-              <VisitorDestinationDetail />
-            </VisitorShell>
+            <ProtectedRoute requiredRole="visitor">
+              <VisitorShell>
+                <VisitorDestinationDetail />
+              </VisitorShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/visitor/journey/:id"
           element={
-            <VisitorShell>
-              <VisitorGuidedJourney />
-            </VisitorShell>
+            <ProtectedRoute requiredRole="visitor">
+              <VisitorShell>
+                <VisitorGuidedJourney />
+              </VisitorShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/visitor/map"
           element={
-            <VisitorShell>
-              <VisitorMapPage />
-            </VisitorShell>
+            <ProtectedRoute requiredRole="visitor">
+              <VisitorShell>
+                <VisitorMapPage />
+              </VisitorShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/visitor/assistant"
           element={
-            <VisitorShell>
-              <VisitorAssistant />
-            </VisitorShell>
+            <ProtectedRoute requiredRole="visitor">
+              <VisitorShell>
+                <VisitorAssistant />
+              </VisitorShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/visitor/help"
           element={
-            <VisitorShell>
-              <VisitorHelpCenter />
-            </VisitorShell>
+            <ProtectedRoute requiredRole="visitor">
+              <VisitorShell>
+                <VisitorHelpCenter />
+              </VisitorShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/visitor/profile"
           element={
-            <VisitorShell>
-              <VisitorProfile />
-            </VisitorShell>
+            <ProtectedRoute requiredRole="visitor">
+              <VisitorShell>
+                <VisitorProfile />
+              </VisitorShell>
+            </ProtectedRoute>
           }
         />
 
